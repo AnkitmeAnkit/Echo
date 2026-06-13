@@ -8,6 +8,7 @@ import { Dashboard } from './components/Dashboard';
 import { Reader } from './components/Reader';
 import { Checkout } from './components/Checkout';
 import { Consulting } from './components/Consulting';
+import { Updates } from './components/Updates';
 
 import { PLAYBOOKS } from './data';
 import { ShieldAlert, Lock } from 'lucide-react';
@@ -98,7 +99,11 @@ function AppContent() {
         return <Checkout />;
 
       case '/consulting':
+      case '/solutions':
         return <Consulting />;
+
+      case '/updates':
+        return <Updates />;
 
 
 

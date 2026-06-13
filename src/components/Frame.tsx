@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAppState } from '../store';
 import { AuthModal } from './AuthModal';
 import { EcoBot } from './EcoBot';
+import EchoRobotLogo from './EchoRobotLogo';
 import { Menu, X, LayoutDashboard, LogOut, WifiOff, Bell, BellOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -49,11 +50,9 @@ export const Frame: React.FC<FrameProps> = ({ children }) => {
             onClick={() => navigate('/')} 
             className="flex items-center space-x-2 cursor-pointer group"
           >
-            <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-              <span className="text-on-primary font-display font-semibold text-sm">cal</span>
-            </div>
+            <EchoRobotLogo size={44} />
             <span className="font-display text-xl font-semibold tracking-tight text-ink">
-              Echo
+              Glitch
             </span>
           </div>
 
@@ -72,10 +71,16 @@ export const Frame: React.FC<FrameProps> = ({ children }) => {
               Playbooks
             </button>
             <button 
-              onClick={() => handleNavLink('/consulting')}
-              className={`text-sm font-medium transition-colors cursor-pointer ${currentPath === '/consulting' ? 'text-ink' : 'text-muted hover:text-ink'}`}
+              onClick={() => handleNavLink('/solutions')}
+              className={`text-sm font-medium transition-colors cursor-pointer ${currentPath === '/solutions' ? 'text-ink' : 'text-muted hover:text-ink'}`}
             >
               Solutions
+            </button>
+            <button 
+              onClick={() => handleNavLink('/updates')}
+              className={`text-sm font-medium transition-colors cursor-pointer ${currentPath === '/updates' ? 'text-ink' : 'text-muted hover:text-ink'}`}
+            >
+              Updates
             </button>
 
           </nav>
@@ -160,10 +165,16 @@ export const Frame: React.FC<FrameProps> = ({ children }) => {
                   Playbooks
                 </button>
                 <button 
-                  onClick={() => handleNavLink('/consulting')}
+                  onClick={() => handleNavLink('/solutions')}
                   className="text-left py-2 hover:text-muted"
                 >
                   Solutions
+                </button>
+                <button 
+                  onClick={() => handleNavLink('/updates')}
+                  className="text-left py-2 hover:text-muted"
+                >
+                  Updates
                 </button>
 
 
@@ -214,7 +225,7 @@ export const Frame: React.FC<FrameProps> = ({ children }) => {
       <footer className="bg-surface-dark py-16 text-sm text-on-dark-soft relative z-10">
         <div className="w-full px-6 md:px-10 h-full flex flex-col md:flex-row justify-between space-y-12 md:space-y-0">
           
-          <div className="space-y-4 max-w-sm">
+          <div className="space-y-4 max-w-xs w-full">
             <div className="flex items-center space-x-2">
               <span className="font-display text-xl font-semibold tracking-tight text-on-dark">Echo Glitch</span>
             </div>
@@ -229,7 +240,7 @@ export const Frame: React.FC<FrameProps> = ({ children }) => {
               <ul className="space-y-3">
                 <li><button onClick={() => navigate('/')} className="hover:text-on-dark transition-colors cursor-pointer">Home</button></li>
                 <li><button onClick={() => navigate('/playbooks')} className="hover:text-on-dark transition-colors cursor-pointer">Playbooks</button></li>
-                <li><button onClick={() => navigate('/consulting')} className="hover:text-on-dark transition-colors cursor-pointer">Solutions</button></li>
+                <li><button onClick={() => navigate('/solutions')} className="hover:text-on-dark transition-colors cursor-pointer">Solutions</button></li>
               </ul>
             </div>
             <div className="space-y-4">
@@ -243,8 +254,8 @@ export const Frame: React.FC<FrameProps> = ({ children }) => {
             <div className="space-y-4">
               <span className="block text-on-dark font-medium">Resources</span>
               <ul className="space-y-3">
-                <li><button className="hover:text-on-dark transition-colors cursor-pointer">Documentation</button></li>
-                <li><button className="hover:text-on-dark transition-colors cursor-pointer">Blog</button></li>
+                <li><button onClick={() => navigate('/playbooks')} className="hover:text-on-dark transition-colors cursor-pointer">Documentation</button></li>
+                <li><button onClick={() => navigate('/updates')} className="hover:text-on-dark transition-colors cursor-pointer">Updates</button></li>
               </ul>
             </div>
             <div className="space-y-4">
