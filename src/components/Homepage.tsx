@@ -3,6 +3,7 @@ import { useAppState } from '../store';
 import { PLAYBOOKS } from '../data';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, X } from 'lucide-react';
+import TerminalScreen from './TerminalScreen';
 
 interface PlaybookBlueprint {
   id: string;
@@ -90,63 +91,49 @@ export const Homepage: React.FC = () => {
       <section className="w-full px-6 md:px-10 pt-16 lg:pt-0 min-h-[calc(100vh-64px)] flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
-          <div className="lg:col-span-7 flex flex-col justify-center space-y-8">
-            <h1 className="font-display text-5xl md:text-7xl font-semibold leading-tight text-ink tracking-tight pr-4">
+          <div className="lg:col-span-6 flex flex-col justify-center space-y-8">
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="font-display text-5xl md:text-7xl font-semibold leading-tight text-ink tracking-tight pr-4"
+            >
               Cut Through the AI Hype. Execute with Precision.
-            </h1>
+            </motion.h1>
 
-            <p className="text-lg text-body md:w-4/5 leading-relaxed">
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="text-lg text-body md:w-4/5 leading-relaxed"
+            >
               EchoGlitch is a premium ecosystem delivering actionable, densified AI Playbooks and 1-on-1 consulting for ambitious professionals. No generic tutorials. Just proven blueprints and pure execution.
-            </p>
+            </motion.p>
 
-            <div className="pt-4 flex flex-wrap gap-4">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="pt-4 flex flex-wrap gap-4"
+            >
               <button
                 onClick={() => navigate('/playbooks')}
-                className="bg-primary text-on-primary hover:bg-primary-active px-6 py-3 rounded-md font-semibold text-sm transition-colors flex items-center justify-center space-x-2 h-12 cursor-pointer"
+                className="bg-primary text-on-primary hover:bg-[#1a1a1a] hover:scale-[1.02] transition-all duration-200 px-6 py-3 rounded-md font-semibold text-sm flex items-center justify-center space-x-2 h-12 cursor-pointer"
               >
                 <span>Browse Playbooks</span>
               </button>
 
               <button
                 onClick={() => navigate('/consulting')}
-                className="bg-canvas border border-hairline text-ink hover:bg-surface-soft px-6 py-3 rounded-md font-semibold text-sm transition-colors flex items-center justify-center h-12 cursor-pointer"
+                className="bg-canvas border border-hairline text-ink hover:bg-[#f5f5f5] transition-colors duration-200 px-6 py-3 rounded-md font-semibold text-sm flex items-center justify-center h-12 cursor-pointer"
               >
                 <span>Book Consulting</span>
               </button>
-            </div>
+            </motion.div>
           </div>
 
-          {/* Hero App Mockup Card */}
-          <div className="lg:col-span-5 border border-hairline bg-canvas rounded-xl shadow-sm p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-hairline pb-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-surface-card flex items-center justify-center font-medium text-ink">
-                  EG
-                </div>
-                <div>
-                  <h3 className="font-semibold text-ink text-sm">Echo Glitch Consulting</h3>
-                  <p className="text-muted text-xs">30 min meeting</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-7 gap-2 pt-2">
-              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
-                <div key={i} className="text-center text-xs font-medium text-muted">{day}</div>
-              ))}
-              {[...Array(31)].map((_, i) => (
-                <div
-                  key={`day-${i}`}
-                  className={`aspect-square flex items-center justify-center text-sm rounded-full ${i === 14 ? 'bg-primary text-on-primary font-semibold' : 'text-ink hover:bg-surface-soft cursor-pointer'}`}
-                >
-                  {i + 1}
-                </div>
-              ))}
-            </div>
-
-            <button className="w-full bg-primary text-on-primary py-3 rounded-md text-sm font-semibold mt-4 cursor-pointer">
-              Confirm Time
-            </button>
+          <div className="lg:col-span-6 flex items-center justify-center lg:justify-center w-full">
+            <TerminalScreen />
           </div>
 
         </div>
@@ -164,14 +151,20 @@ export const Homepage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {BLUEPRINTS.map((item) => {
+          {BLUEPRINTS.map((item, index) => {
             const hasPurchased = purchasedSlugs.includes(item.id);
             return (
               <motion.div
                 key={item.id}
-                layoutId={item.id}
-                whileHover={{ scale: 1.02, boxShadow: "0 20px 40px -15px rgba(0,0,0,0.1)" }}
-                transition={springTransition}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                whileHover={{ y: -4, boxShadow: "0 10px 25px rgba(0,0,0,0.05)" }}
+                transition={{ 
+                  opacity: { delay: index * 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+                  y: { delay: index * 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+                  boxShadow: { duration: 0.3 },
+                }}
                 className="bg-surface-card rounded-lg p-8 flex flex-col justify-between border border-hairline/60"
               >
                 <div className="space-y-4">
@@ -215,14 +208,14 @@ export const Homepage: React.FC = () => {
                   <div className="flex space-x-3">
                     <button
                       onClick={() => setSelectedCard(item)}
-                      className="bg-canvas border border-hairline hover:bg-surface-soft px-4 py-2 rounded-md text-sm font-semibold text-ink transition-colors cursor-pointer"
+                      className="bg-canvas border border-hairline text-ink hover:bg-[#f5f5f5] transition-colors duration-200 px-4 py-2 rounded-md text-sm font-semibold cursor-pointer"
                     >
                       View
                     </button>
 
                     <button
                       onClick={() => navigate(item.id === 'hyper-scale-backend' ? '/playbooks' : '/consulting')}
-                      className="bg-primary text-on-primary hover:bg-primary-active px-4 py-2 rounded-md text-sm font-semibold transition-colors cursor-pointer"
+                      className="bg-primary text-on-primary hover:bg-[#1a1a1a] hover:scale-[1.02] transition-all duration-200 px-4 py-2 rounded-md text-sm font-semibold cursor-pointer"
                     >
                       Explore
                     </button>
@@ -254,8 +247,10 @@ export const Homepage: React.FC = () => {
               onClick={() => setSelectedCard(null)}
             >
               <motion.div
-                layoutId={selectedCard.id}
-                transition={springTransition}
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 onClick={(e) => e.stopPropagation()}
                 className="bg-white/85 backdrop-blur-xl border border-white/40 shadow-2xl rounded-2xl max-w-2xl w-full overflow-hidden relative text-zinc-900 pointer-events-auto flex flex-col max-h-[90vh]"
               >
@@ -333,7 +328,7 @@ export const Homepage: React.FC = () => {
                         setSelectedCard(null);
                         navigate(selectedCard.id === 'hyper-scale-backend' ? '/playbooks' : '/consulting');
                       }}
-                      className="bg-primary text-on-primary hover:bg-primary-active px-6 py-3 rounded-md text-sm font-semibold transition-colors cursor-pointer shadow-md"
+                      className="bg-primary text-on-primary hover:bg-[#1a1a1a] hover:scale-[1.02] transition-all duration-200 px-6 py-3 rounded-md text-sm font-semibold shadow-md cursor-pointer"
                     >
                       Explore
                     </button>
@@ -350,10 +345,9 @@ export const Homepage: React.FC = () => {
       <section className="w-full px-6 md:px-10 py-24">
         {!isBookingExpanded && (
           <motion.div
-            layoutId="booking-cta-container"
             onClick={() => setIsBookingExpanded(true)}
-            whileHover={{ scale: 1.01 }}
-            transition={{ type: "spring", bounce: 0.15, duration: 0.6 }}
+            whileHover={{ y: -4, boxShadow: "0 10px 25px rgba(0,0,0,0.05)" }}
+            transition={{ duration: 0.3 }}
             className="bg-surface-card rounded-lg p-12 md:p-24 text-center max-w-4xl mx-auto space-y-6 cursor-pointer border border-hairline/60 flex flex-col items-center justify-center"
           >
             <motion.h2
@@ -402,8 +396,10 @@ export const Homepage: React.FC = () => {
               onClick={() => setIsBookingExpanded(false)}
             >
               <motion.div
-                layoutId="booking-cta-container"
-                transition={{ type: "spring", bounce: 0.15, duration: 0.6 }}
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 onClick={(e) => e.stopPropagation()}
                 className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-2xl rounded-3xl w-full max-w-4xl mx-4 overflow-hidden flex flex-col max-h-[90vh] relative p-8 text-zinc-900 pointer-events-auto"
               >

@@ -43,7 +43,12 @@ export const Frame: React.FC<FrameProps> = ({ children }) => {
       )}
 
       {/* Global Header */}
-      <header className="sticky top-0 z-50 bg-canvas h-16 flex items-center border-b border-hairline-soft">
+      <motion.header 
+        initial={{ y: '-100%' }} 
+        animate={{ y: 0 }} 
+        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+        className="sticky top-0 z-50 bg-canvas h-16 flex items-center border-b border-hairline-soft"
+      >
         <div className="w-full px-6 md:px-10 flex justify-between items-center">
           
           <div 
@@ -214,7 +219,7 @@ export const Frame: React.FC<FrameProps> = ({ children }) => {
             </motion.div>
           )}
         </AnimatePresence>
-      </header>
+      </motion.header>
 
       {/* Main View Area */}
       <main className="flex-1 w-full bg-canvas">
