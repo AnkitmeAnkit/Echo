@@ -5,16 +5,16 @@ import { PLAYBOOKS } from './data';
 interface AppContextType {
   currentUser: User | null;
   purchasedSlugs: string[];
-  introSeen: boolean;
   currentPath: string;
   routeParams: Record<string, string>;
   bookings: ConsultingBooking[];
   offlineMode: boolean;
   notificationsEnabled: boolean;
   isAuthModalOpen: boolean;
+  isLoading: boolean;
   
   // Actions
-  setIntroSeen: (seen: boolean) => void;
+  setLoading: (loading: boolean) => void;
   login: (email: string, name: string, role: string, isPremium?: boolean) => void;
   register: (email: string, name: string, role: string) => void;
   logout: () => void;
@@ -41,7 +41,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Auth & Storage State
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [purchasedSlugs, setPurchasedSlugs] = useState<string[]>([]);
-  const [introSeen, setIntroSeenState] = useState<boolean>(false);
+  const [isLoading, setIsLoadingState] = useState<boolean>(false);
   const [bookings, setBookings] = useState<ConsultingBooking[]>([]);
   const [offlineMode, setOfflineMode] = useState<boolean>(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(false);
@@ -107,10 +107,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Sync Storage
   useEffect(() => {
-    // 1. Intro SEEN
-    // Always show intro on load/reload
-    setIntroSeenState(false);
-
     // 2. Auth State
     const savedUser = localStorage.getItem('eg_user');
     if (savedUser) {
@@ -154,9 +150,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     window.location.hash = path;
   };
 
-  // Action: Intro Seen
-  const setIntroSeen = (seen: boolean) => {
-    setIntroSeenState(seen);
+  // Action: Set Loading
+  const setLoading = (loading: boolean) => {
+    setIsLoadingState(loading);
   };
 
   // Action: Login
@@ -275,13 +271,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider value={{
       currentUser,
       purchasedSlugs,
-      introSeen,
+      isLoading,
       currentPath,
       routeParams,
       bookings,
       offlineMode,
       notificationsEnabled,
-      setIntroSeen,
+      setLoading,
       login,
       register,
       logout,

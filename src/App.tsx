@@ -1,6 +1,6 @@
 import { AppProvider, useAppState } from './store';
 import { Frame } from './components/Frame';
-import { CinematicGate } from './components/CinematicGate';
+import { LoadingScreen } from './components/LoadingScreen';
 import { Homepage } from './components/Homepage';
 import { Catalog } from './components/Catalog';
 import { PlaybookDetail } from './components/PlaybookDetail';
@@ -16,7 +16,7 @@ import React, { useState } from 'react';
 
 
 function AppContent() {
-  const { currentPath, routeParams, currentUser, purchasedSlugs, introSeen, navigate, login, saveIntent, setAuthModalOpen } = useAppState();
+  const { currentPath, routeParams, currentUser, purchasedSlugs, isLoading, navigate, login, saveIntent, setAuthModalOpen } = useAppState();
 
   // Global scroll-to-top on route change
   React.useEffect(() => {
@@ -113,9 +113,9 @@ function AppContent() {
     }
   };
 
-  // STAGE 1: CINEMATIC BOOK GATEWAY INTERCEPT
-  if (!introSeen) {
-    return <CinematicGate />;
+  // GLOBAL LOADING INTERCEPT
+  if (isLoading) {
+    return <LoadingScreen />;
   }
 
   // Else, standard high-fashion layout with guards

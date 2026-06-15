@@ -181,7 +181,7 @@ export const Reader: React.FC = () => {
 
         <div className="flex items-center space-x-4 text-sm font-semibold text-muted">
           <span className="hidden sm:inline">
-            {saveStatus === 'saved' ? 'Saved' : 'Saving...'}
+            {saveStatus === 'synced' ? 'Saved' : 'Saving...'}
           </span>
 
           <div className="h-4 w-px bg-hairline hidden sm:block" />

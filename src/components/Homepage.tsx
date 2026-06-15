@@ -81,7 +81,7 @@ export const Homepage: React.FC = () => {
     }
   };
 
-  const springTransition = { type: 'spring', bounce: 0.2, duration: 0.6 };
+  const springTransition = { type: 'spring' as const, bounce: 0.2, duration: 0.6 };
 
   return (
     <div className="bg-canvas text-ink font-sans pb-24">
@@ -153,7 +153,7 @@ export const Homepage: React.FC = () => {
       </section>
 
       {/* Featured Playbooks Section */}
-      <section className="w-full px-6 md:px-10 py-section">
+      <section className="w-full px-6 md:px-10 py-24">
         <div className="text-center mb-16 space-y-4">
           <h2 className="font-display text-4xl md:text-5xl font-semibold text-ink tracking-tight">
             Actionable AI Blueprints
@@ -347,14 +347,14 @@ export const Homepage: React.FC = () => {
       </AnimatePresence>
 
       {/* CTA Section */}
-      <section className="w-full px-6 md:px-10 py-section">
+      <section className="w-full px-6 md:px-10 py-24">
         {!isBookingExpanded && (
           <motion.div
             layoutId="booking-cta-container"
             onClick={() => setIsBookingExpanded(true)}
             whileHover={{ scale: 1.01 }}
             transition={{ type: "spring", bounce: 0.15, duration: 0.6 }}
-            className="bg-surface-card rounded-lg p-12 md:p-section text-center max-w-4xl mx-auto space-y-6 cursor-pointer border border-hairline/60 flex flex-col items-center justify-center"
+            className="bg-surface-card rounded-lg p-12 md:p-24 text-center max-w-4xl mx-auto space-y-6 cursor-pointer border border-hairline/60 flex flex-col items-center justify-center"
           >
             <motion.h2
               layoutId="booking-title"
