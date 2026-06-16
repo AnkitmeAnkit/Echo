@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppState } from '../store';
 import { AuthModal } from './AuthModal';
 import { EcoBot } from './EcoBot';
 import EchoRobotLogo from './EchoRobotLogo';
 import { Menu, X, LayoutDashboard, LogOut, WifiOff, Bell, BellOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { supabase } from '../supabaseClient';
 
 interface FrameProps {
   children: React.ReactNode;
@@ -13,6 +14,27 @@ interface FrameProps {
 export const Frame: React.FC<FrameProps> = ({ children }) => {
   const { currentPath, navigate, currentUser, logout, offlineMode, setOfflineMode, notificationsEnabled, toggleNotifications, isAuthModalOpen, setAuthModalOpen } = useAppState();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [supabaseUser, setSupabaseUser] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSupabaseUser(!!session?.user);
+    });
+
+    // Subscribe to auth state changes in real-time
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSupabaseUser(!!session?.user);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSupabaseSignOut = async () => {
+    await supabase.auth.signOut();
+    logout(); // clear local store state
+    navigate('/');
+  };
 
   const handleNavLink = (path: string) => {
     navigate(path);
@@ -103,7 +125,7 @@ export const Frame: React.FC<FrameProps> = ({ children }) => {
               </button>
             </div>
 
-            {currentUser ? (
+            {supabaseUser ? (
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => navigate('/dashboard')}
@@ -111,23 +133,19 @@ export const Frame: React.FC<FrameProps> = ({ children }) => {
                 >
                   Dashboard
                 </button>
-                <div 
-                  className="w-9 h-9 rounded-full bg-surface-card text-ink flex items-center justify-center text-sm font-medium cursor-pointer"
-                  title={`Role: ${currentUser.role}`}
-                >
-                  {currentUser.name ? currentUser.name.substring(0, 2).toUpperCase() : 'US'}
-                </div>
                 <button
-                  onClick={logout}
-                  className="text-muted hover:text-ink p-2 transition-colors cursor-pointer"
+                  onClick={handleSupabaseSignOut}
+                  className="inline-flex items-center gap-2 border border-hairline bg-canvas hover:bg-surface-soft text-ink text-sm font-semibold px-4 py-2 rounded-md transition-colors cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
+                  Sign Out
                 </button>
               </div>
             ) : (
               <div className="flex items-center space-x-4">
                 <button
                   onClick={handleAuthTrigger}
+                  id="login-trigger-btn"
                   className="bg-primary text-on-primary hover:bg-primary-active px-5 py-2.5 rounded-md text-sm font-semibold transition-colors cursor-pointer h-10 flex items-center justify-center"
                 >
                   Member Access
@@ -184,7 +202,7 @@ export const Frame: React.FC<FrameProps> = ({ children }) => {
 
 
                 <div className="border-t border-hairline my-2 pt-4 flex flex-col space-y-4">
-                  {currentUser ? (
+                  {supabaseUser ? (
                     <>
                       <button
                         onClick={() => handleNavLink('/dashboard')}
@@ -195,13 +213,13 @@ export const Frame: React.FC<FrameProps> = ({ children }) => {
                       </button>
                       <button
                         onClick={() => {
-                          logout();
+                          handleSupabaseSignOut();
                           setMobileMenuOpen(false);
                         }}
                         className="text-left py-2 flex items-center space-x-2 text-muted"
                       >
                         <LogOut className="w-4 h-4" />
-                        <span>Sign out</span>
+                        <span>Sign Out</span>
                       </button>
                     </>
                   ) : (
