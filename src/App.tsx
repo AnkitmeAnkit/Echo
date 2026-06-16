@@ -11,7 +11,6 @@ import { Consulting } from './components/Consulting';
 import { Updates } from './components/Updates';
 
 import { PLAYBOOKS } from './data';
-import { ShieldAlert, Lock } from 'lucide-react';
 import React, { useState } from 'react';
 
 
@@ -38,19 +37,7 @@ function AppContent() {
 
 
       case '/dashboard':
-        // Guard: JWT Required. If empty, redirect to /auth
-        if (!currentUser) {
-          return (
-            <div className="py-24 max-w-sm mx-auto text-center font-mono px-6">
-              <ShieldAlert className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <p className="text-red-400 uppercase text-xs tracking-widest mb-2">ACCESS GATED BY AUDITING NODE</p>
-              <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-6">Credential checks required prior to directory opening.</p>
-              <button onClick={() => setAuthModalOpen(true)} className="bg-white text-black py-2.5 px-6 uppercase text-xs tracking-widest font-bold block w-full cursor-pointer">
-                Commit Signature Token
-              </button>
-            </div>
-          );
-        }
+        // Auth is handled inside Dashboard via supabase.auth.getUser()
         return <Dashboard />;
 
       case '/reader/[slug]':
