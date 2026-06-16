@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { useAppState } from '../store';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ const isValidEmail = (email: string): boolean =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+  const { navigate } = useAppState();
   const [mounted, setMounted] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
 
@@ -102,6 +104,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         });
         if (error) throw error;
         handleClose();
+        navigate('/dashboard');
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -114,6 +117,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         });
         if (error) throw error;
         handleClose();
+        navigate('/dashboard');
       }
     } catch (error: any) {
       setAuthError(error.message || 'Authentication failed');
