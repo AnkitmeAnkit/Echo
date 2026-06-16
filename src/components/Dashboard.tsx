@@ -1,13 +1,57 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { motion } from 'motion/react';
+import { supabase } from '../supabaseClient';
 import { useAppState } from '../store';
-import { PLAYBOOKS } from '../data';
-import { Playbook } from '../types';
-import { ShieldAlert, Compass, Shield } from 'lucide-react';
+import { BookOpen, CalendarClock, Settings, LogOut, ShieldAlert, Loader2 } from 'lucide-react';
+
+type SupabaseUser = {
+  email?: string;
+  user_metadata?: { full_name?: string };
+  created_at?: string;
+};
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+};
 
 export const Dashboard: React.FC = () => {
-  const { currentUser, purchasedSlugs, navigate, getScrollPosition } = useAppState();
+  const { navigate, logout } = useAppState();
 
-  if (!currentUser) {
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data.user) {
+        setUser(null);
+      } else {
+        setUser(data.user);
+      }
+      setLoading(false);
+    };
+    fetchUser();
+  }, []);
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await supabase.auth.signOut();
+    logout(); // clear local store state & navigate to '/'
+  };
+
+  // ── Loading skeleton ───────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-muted animate-spin" />
+      </div>
+    );
+  }
+
+  // ── Unauthenticated guard ──────────────────────────────────────────────────
+  if (!user) {
     return (
       <div className="py-24 max-w-sm mx-auto text-center px-6">
         <ShieldAlert className="w-12 h-12 text-error mx-auto mb-4" />
@@ -26,189 +70,108 @@ export const Dashboard: React.FC = () => {
     );
   }
 
-  const purchasedPlaybooks = PLAYBOOKS.filter(p => purchasedSlugs.includes(p.slug));
+  const displayName =
+    user.user_metadata?.full_name ||
+    user.email?.split('@')[0] ||
+    'Member';
 
-  const getRoleRecommendations = (role: string): Playbook[] => {
-    const unowned = PLAYBOOKS.filter(p => !purchasedSlugs.includes(p.slug));
-    if (unowned.length === 0) return [];
-    
-    if (role.toLowerCase().includes('engineering')) {
-      return unowned.filter(p => p.track === 'engineering' || p.track === 'gct');
-    }
-    if (role.toLowerCase().includes('strategist') || role.toLowerCase().includes('marketing') || role.toLowerCase().includes('design')) {
-      return unowned.filter(p => p.track === 'design' || p.track === 'strategy');
-    }
-    return unowned.slice(0, 2);
-  };
+  const memberSince = user.created_at
+    ? new Date(user.created_at).toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      })
+    : '—';
 
-  const recommendedPlaybooks = getRoleRecommendations(currentUser.role);
+  // ── Placeholder section card ───────────────────────────────────────────────
+  const PlaceholderCard: React.FC<{
+    icon: React.ReactNode;
+    title: string;
+    description: string;
+    delay: number;
+  }> = ({ icon, title, description, delay }) => (
+    <motion.div
+      variants={fadeInUp}
+      initial="initial"
+      animate="animate"
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay }}
+      className="bg-surface-card border border-hairline rounded-xl p-8 flex flex-col gap-5 shadow-sm"
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-canvas border border-hairline flex items-center justify-center text-muted">
+          {icon}
+        </div>
+        <h2 className="font-display text-xl font-semibold text-ink tracking-tight">{title}</h2>
+      </div>
 
+      <div className="flex-1 border border-dashed border-hairline rounded-lg bg-canvas flex flex-col items-center justify-center py-14 gap-3">
+        <p className="text-sm text-muted font-medium">Nothing here yet.</p>
+        <p className="text-xs text-muted/70 text-center max-w-[200px]">{description}</p>
+      </div>
+    </motion.div>
+  );
+
+  // ── Authenticated dashboard ────────────────────────────────────────────────
   return (
     <div className="bg-canvas text-ink font-sans pb-24">
-      
-      <section className="max-w-7xl mx-auto px-6 pt-12 pb-8 border-b border-hairline-soft">
-        <h1 className="font-display text-4xl md:text-5xl font-semibold tracking-tight text-ink">
-          Dashboard
-        </h1>
-        <div className="flex flex-wrap items-center gap-3 mt-4 text-sm text-muted">
-          <span>Welcome back, <span className="text-ink font-medium">{currentUser.name}</span></span>
-          <span className="text-hairline">|</span>
-          <span>Role: <span className="text-ink font-medium">{currentUser.role}</span></span>
-        </div>
-      </section>
 
-      <section className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-start">
-          
-          {/* Left Column: My Library */}
-          <div className="lg:col-span-8 space-y-8">
-            <h2 className="font-display text-2xl text-ink font-semibold tracking-tight pb-4 border-b border-hairline">
-              Your Playbooks
-            </h2>
+      {/* ── Welcome Header ── */}
+      <motion.section
+        variants={fadeInUp}
+        initial="initial"
+        animate="animate"
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full border-b border-hairline"
+      >
+        <div className="max-w-6xl mx-auto px-6 md:px-10 py-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          <div className="space-y-1">
+            <p className="text-xs text-muted font-semibold uppercase tracking-widest">Member Access</p>
+            <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight text-ink">
+              Welcome back, {displayName}
+            </h1>
+            <p className="text-sm text-muted">
+              {user.email} &nbsp;·&nbsp; Member since {memberSince}
+            </p>
+          </div>
 
-            {purchasedPlaybooks.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {purchasedPlaybooks.map((playbook) => {
-                  const scrollPctDecimal = getScrollPosition(playbook.slug);
-                  const scrollPct = Math.round(scrollPctDecimal * 100);
-                  
-                  const radius = 24;
-                  const strokeWidth = 4;
-                  const circumference = 2 * Math.PI * radius;
-                  const strokeDashoffset = circumference - (scrollPct / 100) * circumference;
-
-                  return (
-                    <div 
-                      key={playbook.slug}
-                      className="border border-hairline bg-surface-card hover:border-surface-strong transition-colors rounded-lg flex flex-col justify-between p-6 shadow-sm min-h-[220px]"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="max-w-[70%]">
-                          <span className="text-xs text-muted font-medium bg-canvas px-2 py-1 rounded-md border border-hairline mb-2 inline-block">
-                            {playbook.track}
-                          </span>
-                          <h3 className="font-semibold text-lg text-ink line-clamp-2 leading-tight">
-                            {playbook.title}
-                          </h3>
-                        </div>
-
-                        <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
-                          <svg className="w-full h-full transform -rotate-90">
-                            <circle
-                              cx="24"
-                              cy="24"
-                              r={radius}
-                              stroke="var(--color-hairline)"
-                              strokeWidth={strokeWidth}
-                              fill="transparent"
-                            />
-                            <circle
-                              cx="24"
-                              cy="24"
-                              r={radius}
-                              stroke="var(--color-primary)"
-                              strokeWidth={strokeWidth}
-                              fill="transparent"
-                              strokeDasharray={circumference}
-                              strokeDashoffset={strokeDashoffset}
-                              className="transition-all duration-300"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          <span className="absolute text-[10px] font-semibold text-ink">{scrollPct}%</span>
-                        </div>
-                      </div>
-
-                      <div className="pt-6 mt-auto flex justify-between items-center text-sm">
-                        <div className="text-muted">
-                          <span className="block text-xs font-medium">Current Progress</span>
-                          <span className="text-ink font-medium">Chapter {Math.floor(scrollPctDecimal * playbook.chapters.length) + 1}</span>
-                        </div>
-
-                        <button
-                          onClick={() => navigate(`/reader/${playbook.slug}`)}
-                          className="bg-canvas border border-hairline hover:bg-surface-soft text-ink px-4 py-2 text-sm font-semibold transition-colors rounded-md"
-                        >
-                          {scrollPct > 0 ? 'Continue' : 'Start'}
-                        </button>
-                      </div>
-
-                    </div>
-                  );
-                })}
-              </div>
+          <button
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className="inline-flex items-center gap-2 border border-hairline bg-canvas hover:bg-surface-soft text-ink text-sm font-semibold px-5 py-2.5 rounded-md transition-colors disabled:opacity-60 cursor-pointer self-start sm:self-auto shrink-0"
+          >
+            {signingOut ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <div className="text-center py-16 border border-hairline border-dashed bg-surface-soft rounded-lg">
-                <p className="text-sm text-muted font-medium mb-4">
-                  You haven't acquired any playbooks yet.
-                </p>
-                <button
-                  onClick={() => navigate('/playbooks')}
-                  className="text-sm font-semibold text-ink hover:underline"
-                >
-                  Browse Playbooks
-                </button>
-              </div>
+              <LogOut className="w-4 h-4" />
             )}
-          </div>
+            Sign Out
+          </button>
+        </div>
+      </motion.section>
 
-          {/* Right Column: Recommendations */}
-          <div className="lg:col-span-4 space-y-8">
-            <div className="border border-hairline p-6 bg-surface-card rounded-lg shadow-sm space-y-6">
-              <div className="flex items-center space-x-2 border-b border-hairline pb-4">
-                <Compass className="w-5 h-5 text-muted" />
-                <h2 className="font-display text-xl text-ink font-semibold tracking-tight">
-                  Recommended for you
-                </h2>
-              </div>
-              
-              <div className="space-y-4">
-                {recommendedPlaybooks.length > 0 ? (
-                  recommendedPlaybooks.map((blueprint) => (
-                    <div 
-                      key={blueprint.slug}
-                      className="border border-hairline bg-canvas hover:border-surface-strong transition-colors p-4 rounded-md cursor-pointer shadow-sm group flex flex-col justify-between"
-                      onClick={() => navigate(`/playbooks/${blueprint.slug}`)}
-                    >
-                      <div>
-                        <span className="text-xs text-muted font-medium mb-1 block">{blueprint.track} track</span>
-                        <h4 className="font-semibold text-sm text-ink group-hover:underline line-clamp-1">
-                          {blueprint.title}
-                        </h4>
-                        <p className="text-xs text-muted line-clamp-1 mt-1">
-                          {blueprint.summary}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-4 bg-canvas border border-hairline rounded-md text-xs text-muted font-medium">
-                    You have acquired all available playbooks.
-                  </div>
-                )}
-              </div>
-            </div>
+      {/* ── Placeholder Sections Grid ── */}
+      <section className="max-w-6xl mx-auto px-6 md:px-10 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
-            {/* Account Details */}
-            <div className="border border-hairline p-6 bg-canvas rounded-lg shadow-sm space-y-4 text-sm text-ink">
-              <span className="block text-ink font-semibold border-b border-hairline pb-4 flex items-center space-x-2">
-                <Shield className="w-4 h-4 text-success" />
-                <span>Account Security</span>
-              </span>
-              <div className="flex justify-between">
-                <span className="text-muted">Email</span>
-                <span className="font-medium truncate ml-4">{currentUser.email}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted">Joined</span>
-                <span className="font-medium">{new Date(currentUser.joinedAt).toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted">Auth Status</span>
-                <span className="font-medium text-success bg-surface-soft px-2 py-0.5 rounded text-xs">Secure</span>
-              </div>
-            </div>
-          </div>
+          <PlaceholderCard
+            icon={<BookOpen className="w-5 h-5" />}
+            title="My Custom Playbooks"
+            description="Your requested custom AI playbooks will appear here once delivered."
+            delay={0.1}
+          />
+
+          <PlaceholderCard
+            icon={<CalendarClock className="w-5 h-5" />}
+            title="My Consultancy Sessions"
+            description="Upcoming and past 1-on-1 consulting sessions will be listed here."
+            delay={0.2}
+          />
+
+          <PlaceholderCard
+            icon={<Settings className="w-5 h-5" />}
+            title="Account Settings"
+            description="Manage your profile, email preferences, and security settings here."
+            delay={0.3}
+          />
 
         </div>
       </section>
