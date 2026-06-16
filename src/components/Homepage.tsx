@@ -4,6 +4,7 @@ import { PLAYBOOKS } from '../data';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, X } from 'lucide-react';
 import TerminalScreen from './TerminalScreen';
+import { supabase } from '../supabaseClient';
 
 interface PlaybookBlueprint {
   id: string;
@@ -60,6 +61,8 @@ export const Homepage: React.FC = () => {
   const { navigate, currentUser, purchasedSlugs, saveIntent } = useAppState();
   const [selectedCard, setSelectedCard] = useState<PlaybookBlueprint | null>(null);
   const [isBookingExpanded, setIsBookingExpanded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitSuccess, setIsSubmitSuccess] = useState(false);
 
   // Disable body scroll when modal is active
   useEffect(() => {
@@ -67,11 +70,42 @@ export const Homepage: React.FC = () => {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      if (!isBookingExpanded) {
+        setTimeout(() => setIsSubmitSuccess(false), 300);
+      }
     }
     return () => {
       document.body.style.overflow = '';
     };
   }, [selectedCard, isBookingExpanded]);
+
+  const handleBookingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    const formData = new FormData(e.currentTarget);
+    
+    try {
+      const { error } = await supabase
+        .from('free_consultancy')
+        .insert([
+          {
+            full_name: formData.get('fullName'),
+            email: formData.get('email'),
+            phone_number: formData.get('phone'),
+            goals: formData.get('goals')
+          }
+        ]);
+        
+      if (error) throw error;
+      
+      setIsSubmitSuccess(true);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleAcquire = (slug: string, price: number) => {
     if (!currentUser) {
@@ -431,35 +465,76 @@ export const Homepage: React.FC = () => {
                 </div>
 
                 {/* Lead Capture Form */}
-                <div className="bg-white rounded-xl flex-grow mt-6 border border-zinc-200 p-6 overflow-y-auto">
-                  <h3 className="font-display text-2xl font-semibold text-zinc-900 mb-6">Let's Architect Your Blueprint</h3>
-                  <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                    <div className="space-y-1">
-                      <label htmlFor="fullName" className="text-sm font-semibold text-zinc-700">Full Name</label>
-                      <input type="text" id="fullName" required className="w-full border border-zinc-300 rounded-md px-4 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
-                    </div>
+                <div className="bg-white rounded-xl flex-grow mt-6 border border-zinc-200 p-6 overflow-y-auto relative min-h-[460px]">
+                  <AnimatePresence mode="wait">
+                    {!isSubmitSuccess ? (
+                      <motion.div
+                        key="form"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <h3 className="font-display text-2xl font-semibold text-zinc-900 mb-6">Let's Architect Your Blueprint</h3>
+                        <form className="space-y-4" onSubmit={handleBookingSubmit}>
+                          <div className="space-y-1">
+                            <label htmlFor="fullName" className="text-sm font-semibold text-zinc-700">Full Name</label>
+                            <input type="text" id="fullName" name="fullName" required className="w-full border border-zinc-300 rounded-md px-4 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
+                          </div>
 
-                    <div className="space-y-1">
-                      <label htmlFor="email" className="text-sm font-semibold text-zinc-700">Email Address</label>
-                      <input type="email" id="email" required className="w-full border border-zinc-300 rounded-md px-4 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
-                    </div>
+                          <div className="space-y-1">
+                            <label htmlFor="email" className="text-sm font-semibold text-zinc-700">Email Address</label>
+                            <input type="email" id="email" name="email" required className="w-full border border-zinc-300 rounded-md px-4 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
+                          </div>
 
-                    <div className="space-y-1">
-                      <label htmlFor="phone" className="text-sm font-semibold text-zinc-700">Phone Number</label>
-                      <input type="tel" id="phone" required placeholder="+91 00000 00000" className="w-full border border-zinc-300 rounded-md px-4 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all placeholder:text-zinc-400" />
-                    </div>
+                          <div className="space-y-1">
+                            <label htmlFor="phone" className="text-sm font-semibold text-zinc-700">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" required placeholder="+91 00000 00000" className="w-full border border-zinc-300 rounded-md px-4 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all placeholder:text-zinc-400" />
+                          </div>
 
-                    <div className="space-y-1">
-                      <label htmlFor="goals" className="text-sm font-semibold text-zinc-700">What specific workflows or AI goals do you want to discuss?</label>
-                      <textarea id="goals" rows={4} required className="w-full border border-zinc-300 rounded-md px-4 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all resize-y"></textarea>
-                    </div>
+                          <div className="space-y-1">
+                            <label htmlFor="goals" className="text-sm font-semibold text-zinc-700">What specific workflows or AI goals do you want to discuss?</label>
+                            <textarea id="goals" name="goals" rows={4} required className="w-full border border-zinc-300 rounded-md px-4 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all resize-y"></textarea>
+                          </div>
 
-                    <div className="pt-4">
-                      <button type="submit" className="w-full bg-zinc-900 text-white hover:bg-zinc-800 px-6 py-3 rounded-md text-sm font-semibold transition-colors shadow-sm cursor-pointer">
-                        Request Session
-                      </button>
-                    </div>
-                  </form>
+                          <div className="pt-4">
+                            <button 
+                              type="submit" 
+                              disabled={isSubmitting}
+                              className="w-full bg-zinc-900 text-white hover:bg-zinc-800 px-6 py-3 rounded-md text-sm font-semibold transition-colors shadow-sm cursor-pointer disabled:opacity-70 flex justify-center items-center h-12"
+                            >
+                              {isSubmitting ? (
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                  className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                                />
+                              ) : (
+                                'Request Session'
+                              )}
+                            </button>
+                          </div>
+                        </form>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="success"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
+                      >
+                        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
+                          <Check className="w-8 h-8 text-emerald-600" />
+                        </div>
+                        <h3 className="font-display text-2xl font-semibold text-zinc-900 mb-2">Request Received</h3>
+                        <p className="text-zinc-600 text-base leading-relaxed max-w-sm mx-auto">
+                          Thank you for reaching out! We've received your information and will be in touch shortly to schedule your free consultancy call.
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </motion.div>
             </div>

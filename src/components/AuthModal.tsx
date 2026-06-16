@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
+import { supabase } from '../supabaseClient';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -26,6 +27,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+
   // Ensure this only runs on the client to avoid SSR hydration mismatches
   useEffect(() => {
     setMounted(true);
@@ -40,6 +44,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setNameError('');
     setEmailError('');
     setPasswordError('');
+    setAuthError('');
   };
 
   // Reset form when drawer is closed
@@ -50,6 +55,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setNameError('');
     setEmailError('');
     setPasswordError('');
+    setAuthError('');
     setIsLogin(true);
     onClose();
   };
@@ -81,11 +87,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     return valid;
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setAuthError('');
     if (!validate()) return;
-    // Auth logic can be wired to global state here
-    handleClose();
+    
+    setIsLoading(true);
+    
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+        handleClose();
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+            }
+          }
+        });
+        if (error) throw error;
+        handleClose();
+      }
+    } catch (error: any) {
+      setAuthError(error.message || 'Authentication failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!mounted) return null;
@@ -133,6 +167,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   ? 'Sign in to access your execution dashboard.'
                   : 'Join Echo Glitch and architect your AI advantage.'}
               </p>
+
+              <AnimatePresence>
+                {authError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-red-50 text-red-600 text-sm p-4 rounded-lg mb-4"
+                  >
+                    {authError}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Form */}
               <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5 shrink-0">
@@ -219,23 +266,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
                 <button
                   type="submit"
-                  className="w-full mt-4 bg-black text-white font-medium py-3 rounded-lg hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                  disabled={isLoading}
+                  className="w-full mt-4 bg-black text-white font-medium py-3 rounded-lg hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-70 flex items-center justify-center min-h-[48px]"
                 >
-                  {isLogin ? 'Sign In' : 'Create Account'}
-                </button>
-
-                <div className="relative flex items-center py-4" aria-hidden="true">
-                  <div className="flex-grow border-t border-gray-300" />
-                  <span className="flex-shrink-0 mx-4 text-gray-400 text-sm uppercase">or</span>
-                  <div className="flex-grow border-t border-gray-300" />
-                </div>
-
-                <button
-                  type="button"
-                  className="w-full bg-white border border-gray-300 text-gray-700 font-medium py-3 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
-                  aria-label="Continue with Google account"
-                >
-                  Continue with Google
+                  {isLoading ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                    />
+                  ) : isLogin ? (
+                    'Sign In'
+                  ) : (
+                    'Create Account'
+                  )}
                 </button>
               </form>
 

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAppState } from '../store';
 import { User, Mail, Phone, Briefcase, FileText, Code, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { supabase } from '../supabaseClient';
+import { motion, AnimatePresence } from 'motion/react';
 
 export const Consulting: React.FC = () => {
   const { currentUser } = useAppState();
@@ -21,11 +23,46 @@ export const Consulting: React.FC = () => {
   const [bottleneck, setBottleneck] = useState('');
 
   const [completed, setCompleted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate submission
-    setCompleted(true);
+    setIsSubmitting(true);
+
+    try {
+      if (formMode === 'playbook') {
+        const { error } = await supabase
+          .from('solution_custom_playbook')
+          .insert([
+            {
+              full_name: name,
+              email: email,
+              whatsapp_number: whatsapp,
+              profession: profession,
+              target_workflows: workflows
+            }
+          ]);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('solution_consulting')
+          .insert([
+            {
+              full_name: name,
+              email: email,
+              whatsapp_number: whatsapp,
+              tech_stack: techStack,
+              primary_bottleneck: bottleneck
+            }
+          ]);
+        if (error) throw error;
+      }
+      setCompleted(true);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -69,29 +106,44 @@ export const Consulting: React.FC = () => {
       </section>
 
       <section className="w-full px-6 md:px-10">
-        {completed ? (
-          <div className="max-w-xl mx-auto bg-surface-card rounded-xl p-8 md:p-12 text-center space-y-6 shadow-sm border border-hairline animate-fade-in-up">
-            <div className="flex justify-center text-success">
-              <CheckCircle2 className="w-16 h-16" />
-            </div>
-            
-            <div className="space-y-2">
-              <h2 className="font-display text-3xl font-semibold text-ink tracking-tight">Request Received</h2>
-              <p className="text-body text-base">
-                Your parameters have been logged. Our advisory team will review your requirements and reach out shortly with a tailored plan.
-              </p>
-            </div>
-
-            <button
-              onClick={() => setCompleted(false)}
-              className="bg-primary text-on-primary hover:bg-primary-active py-3 px-8 rounded-md text-sm font-semibold transition-colors mt-8 inline-block w-full cursor-pointer"
+        <AnimatePresence mode="wait">
+          {completed ? (
+            <motion.div 
+              key="success"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="max-w-xl mx-auto bg-surface-card rounded-xl p-8 md:p-12 text-center space-y-6 shadow-sm border border-hairline"
             >
-              Submit Another Request
-            </button>
-          </div>
-        ) : (
-          <div className="max-w-2xl mx-auto p-8 bg-surface-card border border-hairline rounded-xl shadow-sm animate-fade-in-up">
-            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="flex justify-center text-success">
+                <CheckCircle2 className="w-16 h-16" />
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="font-display text-3xl font-semibold text-ink tracking-tight">Proposal Requested Successfully</h2>
+                <p className="text-body text-base">
+                  Your parameters have been logged. Our advisory team will review your requirements and reach out shortly with a tailored plan.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setCompleted(false)}
+                className="bg-primary text-on-primary hover:bg-primary-active py-3 px-8 rounded-md text-sm font-semibold transition-colors mt-8 inline-block w-full cursor-pointer"
+              >
+                Submit Another Request
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="form"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="max-w-2xl mx-auto p-8 bg-surface-card border border-hairline rounded-xl shadow-sm"
+            >
+              <form onSubmit={handleSubmit} className="space-y-6">
               
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-ink">Full Name</label>
@@ -205,17 +257,27 @@ export const Consulting: React.FC = () => {
               <div className="pt-8 border-t border-hairline text-center space-y-4">
                 <button
                   type="submit"
-                  className="w-full bg-primary text-on-primary hover:bg-primary-active py-4 text-sm font-semibold rounded-md transition-colors cursor-pointer shadow-sm"
+                  disabled={isSubmitting}
+                  className="w-full bg-primary text-on-primary hover:bg-primary-active py-4 text-sm font-semibold rounded-md transition-colors cursor-pointer shadow-sm disabled:opacity-70 flex items-center justify-center min-h-[52px]"
                 >
-                  Request Custom Proposal
+                  {isSubmitting ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                    />
+                  ) : (
+                    'Request Custom Proposal'
+                  )}
                 </button>
                 <p className="text-xs text-muted">
                   By submitting, you agree to receive a follow-up via WhatsApp and Email regarding your custom architecture and pricing.
                 </p>
               </div>
             </form>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </section>
     </div>
   );
