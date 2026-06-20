@@ -3,6 +3,7 @@ import { useAppState } from '../store';
 import { PLAYBOOKS } from '../data';
 import { Lock, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
+import { supabase } from '../supabaseClient';
 
 export const PlaybookDetail: React.FC = () => {
   const { routeParams, navigate, currentUser, purchasedSlugs, saveIntent, setAuthModalOpen } = useAppState();
@@ -28,22 +29,41 @@ export const PlaybookDetail: React.FC = () => {
 
   const [isAcquiring, setIsAcquiring] = useState(false);
 
-  const initiateStripeCheckout = () => {
-    alert(`Stripe Payment Gateway will open here for ₹${playbook.price}`);
-  };
-
   const handleAcquireClick = async () => {
-    if (isAcquiring) return;
-    setIsAcquiring(true);
-    // Brief pause so the spinner is visible while auth state is confirmed
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    // Guard: not logged in
     if (!currentUser) {
       saveIntent(playbook.slug, playbook.price);
       setAuthModalOpen(true);
-    } else {
-      initiateStripeCheckout();
+      return;
     }
-    setIsAcquiring(false);
+
+    if (isAcquiring) return;
+    setIsAcquiring(true);
+    try {
+      // Resolve the Supabase auth user to get the real UUID
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user) throw new Error('Session expired. Please sign in again.');
+
+      const { error: insertError } = await supabase
+        .from('user_playbooks')
+        .insert({
+          user_id: authData.user.id,
+          playbook_id: playbook.slug,
+          title: playbook.title,
+          status: 'Unread',
+          read_time: '0 min',
+        });
+
+      if (insertError) throw new Error(insertError.message);
+
+      // Success — redirect to library
+      navigate('/dashboard');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Something went wrong.';
+      alert(`Could not acquire playbook: ${message}`);
+    } finally {
+      setIsAcquiring(false);
+    }
   };
 
   const stripMarkdown = (text: string) => {
@@ -106,14 +126,17 @@ export const PlaybookDetail: React.FC = () => {
                   <button
                     onClick={handleAcquireClick}
                     disabled={isAcquiring}
-                    className="w-full bg-primary text-on-primary hover:bg-primary-active py-3 text-center rounded-md font-semibold text-sm transition-colors cursor-pointer disabled:opacity-80 flex items-center justify-center min-h-[44px]"
+                    className="w-full bg-primary text-on-primary hover:bg-primary-active py-3 text-center rounded-md font-semibold text-sm transition-colors cursor-pointer disabled:opacity-80 flex items-center justify-center gap-2 min-h-[44px]"
                   >
                     {isAcquiring ? (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
-                        className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                      />
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
+                          className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full"
+                        />
+                        Acquiring...
+                      </>
                     ) : (
                       'Acquire access'
                     )}

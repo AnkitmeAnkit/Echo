@@ -4,6 +4,7 @@ import { PLAYBOOKS } from '../data';
 import { PlaybookTrack } from '../types';
 import { Search } from 'lucide-react';
 import { motion } from 'motion/react';
+import { supabase } from '../supabaseClient';
 
 export const Catalog: React.FC = () => {
   const { navigate, currentUser, purchasedSlugs, saveIntent, setAuthModalOpen } = useAppState();
@@ -26,21 +27,43 @@ export const Catalog: React.FC = () => {
 
   const [acquiringSlug, setAcquiringSlug] = useState<string | null>(null);
 
-  const initiateStripeCheckout = (slug: string, price: number) => {
-    alert(`Stripe Payment Gateway will open here for ₹${price}`);
-  };
-
   const handleAcquireClick = async (slug: string, price: number) => {
-    setAcquiringSlug(slug);
-    // Brief pause so the spinner is visible while auth state is confirmed
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    // Guard: not logged in
     if (!currentUser) {
       saveIntent(slug, price);
       setAuthModalOpen(true);
-    } else {
-      initiateStripeCheckout(slug, price);
+      return;
     }
-    setAcquiringSlug(null);
+
+    setAcquiringSlug(slug);
+    try {
+      // Resolve the Supabase auth user to get the real UUID
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user) throw new Error('Session expired. Please sign in again.');
+
+      const playbook = PLAYBOOKS.find(p => p.slug === slug);
+      if (!playbook) throw new Error('Playbook not found.');
+
+      const { error: insertError } = await supabase
+        .from('user_playbooks')
+        .insert({
+          user_id: authData.user.id,
+          playbook_id: playbook.slug,
+          title: playbook.title,
+          status: 'Unread',
+          read_time: '0 min',
+        });
+
+      if (insertError) throw new Error(insertError.message);
+
+      // Success — redirect to library
+      navigate('/dashboard');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Something went wrong.';
+      alert(`Could not acquire playbook: ${message}`);
+    } finally {
+      setAcquiringSlug(null);
+    }
   };
 
   return (
@@ -153,14 +176,17 @@ export const Catalog: React.FC = () => {
                       <button
                         onClick={() => handleAcquireClick(playbook.slug, playbook.price)}
                         disabled={acquiringSlug === playbook.slug}
-                        className="bg-primary text-on-primary hover:bg-primary-active px-4 py-2 rounded-md text-sm font-semibold transition-colors disabled:opacity-80 flex items-center justify-center min-w-[72px]"
+                        className="bg-primary text-on-primary hover:bg-primary-active px-4 py-2 rounded-md text-sm font-semibold transition-colors disabled:opacity-80 flex items-center justify-center gap-2 min-w-[72px]"
                       >
                         {acquiringSlug === playbook.slug ? (
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
-                            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                          />
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
+                              className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full"
+                            />
+                            Acquiring...
+                          </>
                         ) : (
                           'Acquire'
                         )}
