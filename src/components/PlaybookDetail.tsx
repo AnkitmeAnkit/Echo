@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppState } from '../store';
 import { PLAYBOOKS } from '../data';
 import { Lock, ArrowLeft } from 'lucide-react';
+import { motion } from 'motion/react';
 
 export const PlaybookDetail: React.FC = () => {
   const { routeParams, navigate, currentUser, purchasedSlugs, saveIntent, setAuthModalOpen } = useAppState();
@@ -25,13 +26,24 @@ export const PlaybookDetail: React.FC = () => {
 
   const hasPurchased = purchasedSlugs.includes(playbook.slug);
 
-  const handleAcquire = () => {
+  const [isAcquiring, setIsAcquiring] = useState(false);
+
+  const initiateStripeCheckout = () => {
+    alert(`Stripe Payment Gateway will open here for ₹${playbook.price}`);
+  };
+
+  const handleAcquireClick = async () => {
+    if (isAcquiring) return;
+    setIsAcquiring(true);
+    // Brief pause so the spinner is visible while auth state is confirmed
+    await new Promise((resolve) => setTimeout(resolve, 600));
     if (!currentUser) {
       saveIntent(playbook.slug, playbook.price);
       setAuthModalOpen(true);
     } else {
-      navigate(`/checkout/${playbook.slug}`);
+      initiateStripeCheckout();
     }
+    setIsAcquiring(false);
   };
 
   const stripMarkdown = (text: string) => {
@@ -92,10 +104,19 @@ export const PlaybookDetail: React.FC = () => {
                   </button>
                 ) : (
                   <button
-                    onClick={handleAcquire}
-                    className="w-full bg-primary text-on-primary hover:bg-primary-active py-3 text-center rounded-md font-semibold text-sm transition-colors cursor-pointer"
+                    onClick={handleAcquireClick}
+                    disabled={isAcquiring}
+                    className="w-full bg-primary text-on-primary hover:bg-primary-active py-3 text-center rounded-md font-semibold text-sm transition-colors cursor-pointer disabled:opacity-80 flex items-center justify-center min-h-[44px]"
                   >
-                    Acquire access
+                    {isAcquiring ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
+                        className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                      />
+                    ) : (
+                      'Acquire access'
+                    )}
                   </button>
                 )}
               </div>
@@ -138,7 +159,7 @@ export const PlaybookDetail: React.FC = () => {
                     <div 
                       key={chapter.id}
                       className={`border border-hairline p-6 bg-canvas rounded-lg transition-colors ${isChapterBlurred ? 'cursor-pointer hover:border-surface-strong' : ''}`}
-                      onClick={isChapterBlurred ? handleAcquire : undefined}
+                      onClick={isChapterBlurred ? handleAcquireClick : undefined}
                     >
                       <div className="flex justify-between items-start mb-4">
                         <div>

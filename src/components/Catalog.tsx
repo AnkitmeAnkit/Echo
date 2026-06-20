@@ -3,6 +3,7 @@ import { useAppState } from '../store';
 import { PLAYBOOKS } from '../data';
 import { PlaybookTrack } from '../types';
 import { Search } from 'lucide-react';
+import { motion } from 'motion/react';
 
 export const Catalog: React.FC = () => {
   const { navigate, currentUser, purchasedSlugs, saveIntent, setAuthModalOpen } = useAppState();
@@ -23,14 +24,23 @@ export const Catalog: React.FC = () => {
     return matchesTrack && matchesSearch;
   });
 
-  const handleAcquire = (slug: string, price: number) => {
+  const [acquiringSlug, setAcquiringSlug] = useState<string | null>(null);
+
+  const initiateStripeCheckout = (slug: string, price: number) => {
+    alert(`Stripe Payment Gateway will open here for ₹${price}`);
+  };
+
+  const handleAcquireClick = async (slug: string, price: number) => {
+    setAcquiringSlug(slug);
+    // Brief pause so the spinner is visible while auth state is confirmed
+    await new Promise((resolve) => setTimeout(resolve, 600));
     if (!currentUser) {
       saveIntent(slug, price);
-      // Trigger Member Access modal
       setAuthModalOpen(true);
     } else {
-      navigate(`/checkout/${slug}`);
+      initiateStripeCheckout(slug, price);
     }
+    setAcquiringSlug(null);
   };
 
   return (
@@ -141,10 +151,19 @@ export const Catalog: React.FC = () => {
                       </button>
                     ) : (
                       <button
-                        onClick={() => handleAcquire(playbook.slug, playbook.price)}
-                        className="bg-primary text-on-primary hover:bg-primary-active px-4 py-2 rounded-md text-sm font-semibold transition-colors"
+                        onClick={() => handleAcquireClick(playbook.slug, playbook.price)}
+                        disabled={acquiringSlug === playbook.slug}
+                        className="bg-primary text-on-primary hover:bg-primary-active px-4 py-2 rounded-md text-sm font-semibold transition-colors disabled:opacity-80 flex items-center justify-center min-w-[72px]"
                       >
-                        Acquire
+                        {acquiringSlug === playbook.slug ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
+                            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                          />
+                        ) : (
+                          'Acquire'
+                        )}
                       </button>
                     )}
                   </div>
