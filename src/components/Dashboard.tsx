@@ -32,31 +32,7 @@ type AcquiredPlaybook = {
   status: 'unread' | 'in_progress' | 'completed';
 };
 
-// ── Mock data (replace body of fetchLibrary with a Supabase query later) ──────
 
-const MOCK_LIBRARY: AcquiredPlaybook[] = [
-  {
-    id: 'hyper-scale-backend',
-    title: 'Hyper-Scale Backend Architecture',
-    purchase_date: '2025-06-01T10:30:00Z',
-    read_time: '58 min',
-    status: 'in_progress',
-  },
-  {
-    id: 'ai-product-strategy',
-    title: 'AI Product Strategy Playbook',
-    purchase_date: '2025-05-18T08:00:00Z',
-    read_time: '34 min',
-    status: 'unread',
-  },
-  {
-    id: 'design-systems-at-scale',
-    title: 'Design Systems at Scale',
-    purchase_date: '2025-04-30T14:15:00Z',
-    read_time: '47 min',
-    status: 'completed',
-  },
-];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -106,27 +82,26 @@ export const Dashboard: React.FC = () => {
     fetchUser();
   }, []);
 
-  // ── Fetch acquired playbooks (swap mock → Supabase query here) ───────────
+  // ── Fetch acquired playbooks from Supabase ──────────────────────────────
   useEffect(() => {
     if (!user) return;
 
     const fetchLibrary = async () => {
       setLibraryLoading(true);
-      /**
-       * TODO: Replace with real Supabase query:
-       *
-       * const { data, error } = await supabase
-       *   .from('user_playbooks')
-       *   .select('id, title, purchase_date, read_time, status')
-       *   .eq('user_id', user.id)
-       *   .order('purchase_date', { ascending: false });
-       *
-       * if (!error && data) setLibrary(data);
-       */
 
-      // Simulated network delay
-      await new Promise((r) => setTimeout(r, 500));
-      setLibrary(MOCK_LIBRARY);
+      const { data, error } = await supabase
+        .from('user_playbooks')
+        .select('id, title, purchase_date, read_time, status')
+        .eq('user_id', user.id)
+        .order('purchase_date', { ascending: false });
+
+      if (!error && data) {
+        setLibrary(data as AcquiredPlaybook[]);
+      } else {
+        console.error('Error fetching library:', error?.message);
+        setLibrary([]);
+      }
+
       setLibraryLoading(false);
     };
 
