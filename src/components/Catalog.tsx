@@ -1,217 +1,197 @@
-import React, { useState } from 'react';
+﻿import React from 'react';
 import { useAppState } from '../store';
+import { Button } from './Button';
+import { Card } from './Card';
+import { Badge } from './Badge';
 import { PLAYBOOKS } from '../data';
-import { PlaybookTrack } from '../types';
-import { Search } from 'lucide-react';
-import { motion } from 'motion/react';
-import { supabase } from '../supabaseClient';
+import { 
+  Lock, Search, FileText, ListOrdered, Gift, RefreshCw, 
+  ClipboardList, Briefcase, BookOpen, GraduationCap, 
+  Target, Gift as GiftIcon, ArrowRight
+} from 'lucide-react';
 
-export const Catalog: React.FC = () => {
-  const { navigate, currentUser, purchasedSlugs, saveIntent, setAuthModalOpen } = useAppState();
-  const [selectedTrack, setSelectedTrack] = useState<PlaybookTrack | 'all'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+export function Catalog() {
+  const { navigate, setAuthModalOpen, routeParams } = useAppState();
+  const [activeFilter, setActiveFilter] = React.useState<string>(routeParams.category || 'all');
 
-  const handleTrackSelect = (track: PlaybookTrack | 'all') => {
-    setSelectedTrack(track);
-  };
+  React.useEffect(() => {
+    setActiveFilter(routeParams.category || 'all');
+  }, [routeParams.category]);
 
-  const filteredPlaybooks = PLAYBOOKS.filter(p => {
-    const matchesTrack = selectedTrack === 'all' || p.track === selectedTrack;
-    const matchesSearch = searchQuery === '' || 
-      p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      p.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.subtitle.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return matchesTrack && matchesSearch;
+  const metadataTags = [
+    { icon: <FileText className="w-4 h-4" />, label: "Well-Researched" },
+    { icon: <ListOrdered className="w-4 h-4" />, label: "Step-by-Step" },
+    { icon: <Gift className="w-4 h-4" />, label: "Free Resources" },
+    { icon: <RefreshCw className="w-4 h-4" />, label: "Always Updated" },
+  ];
+
+  const whatYouGet = [
+    { icon: <BookOpen />, title: "Well-Researched Guides", desc: "Actionable instructions backed by best practices and real-world use." },
+    { icon: <GraduationCap />, title: "Free Learning Resources", desc: "Curated free materials to help you build AI skills." },
+    { icon: <Target />, title: "Task & Industry Focused", desc: "Find playbooks tailored to your role and industry." },
+    { icon: <GiftIcon />, title: "Always Improving", desc: "New playbooks and resources added regularly." },
+    { icon: <Search />, title: "Research with AI", desc: "Use AI to research any topic and get structured, reliable insights.", badge: "New" },
+  ];
+
+  const filteredPlaybooks = PLAYBOOKS.filter((playbook, i) => {
+    if (activeFilter === 'all') return true;
+    const isTask = i % 2 === 0;
+    const isIndustry = i % 2 !== 0;
+    if (activeFilter === 'task') return isTask;
+    if (activeFilter === 'industry') return isIndustry;
+    return true;
   });
 
-  const [acquiringSlug, setAcquiringSlug] = useState<string | null>(null);
-
-  const handleAcquireClick = async (slug: string, price: number) => {
-    // Guard: not logged in
-    if (!currentUser) {
-      saveIntent(slug, price);
-      setAuthModalOpen(true);
-      return;
-    }
-
-    setAcquiringSlug(slug);
-    try {
-      // Resolve the Supabase auth user to get the real UUID
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError || !authData.user) throw new Error('Session expired. Please sign in again.');
-
-      const playbook = PLAYBOOKS.find(p => p.slug === slug);
-      if (!playbook) throw new Error('Playbook not found.');
-
-      const { error: insertError } = await supabase
-        .from('user_playbooks')
-        .insert({
-          user_id: authData.user.id,
-          playbook_id: playbook.slug,
-          title: playbook.title,
-          status: 'Unread',
-          read_time: '0 min',
-        });
-
-      if (insertError) throw new Error(insertError.message);
-
-      // Success — redirect to library
-      navigate('/dashboard');
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Something went wrong.';
-      alert(`Could not acquire playbook: ${message}`);
-    } finally {
-      setAcquiringSlug(null);
-    }
-  };
-
   return (
-    <div className="bg-canvas text-ink font-sans pb-24">
-      
-      {/* Header section */}
-      <section className="w-full px-6 md:px-10 pt-24 pb-12 border-b border-hairline-soft">
-        <h1 className="font-display text-4xl md:text-5xl font-semibold tracking-tight text-ink">
-          Playbooks
-        </h1>
-        <p className="text-body text-lg mt-4 max-w-2xl">
-          Detailed operational guides, system architecture documentation, and high-fidelity design standards.
-        </p>
-      </section>
-
-      {/* Filters and Search */}
-      <section className="w-full px-6 md:px-10 py-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Nav pill group for filters */}
-        <div className="inline-flex bg-surface-soft p-1.5 rounded-pill space-x-1 overflow-x-auto whitespace-nowrap">
-          <button
-            onClick={() => handleTrackSelect('all')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedTrack === 'all' ? 'bg-canvas text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => handleTrackSelect('engineering')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedTrack === 'engineering' ? 'bg-canvas text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
-          >
-            Engineering
-          </button>
-          <button
-            onClick={() => handleTrackSelect('design')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedTrack === 'design' ? 'bg-canvas text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
-          >
-            Design
-          </button>
-          <button
-            onClick={() => handleTrackSelect('strategy')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedTrack === 'strategy' ? 'bg-canvas text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
-          >
-            Strategy
-          </button>
-        </div>
-
-        {/* Search Bar */}
-        <input
-          type="text"
-          placeholder="Search playbooks..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-64 px-4 py-2 border border-gray-200 rounded-lg text-sm bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </section>
-
-      {/* Grid */}
-      <section className="w-full px-6 md:px-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredPlaybooks.slice(0, 1).map((playbook, index) => {
-            const hasPurchased = purchasedSlugs.includes(playbook.slug);
-            return (
-              <div 
-                key={playbook.slug}
-                className="bg-surface-card rounded-lg p-8 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg animate-fade-in-up"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="space-y-4">
-                  <div className="inline-block bg-canvas px-3 py-1 rounded-pill text-xs font-medium border border-hairline text-muted">
-                    {playbook.track} Track
-                  </div>
-
-                  {hasPurchased && (
-                    <div className="inline-block bg-surface-soft px-3 py-1 rounded-pill text-xs font-medium border border-hairline text-success ml-2">
-                      Active Access
-                    </div>
-                  )}
-                  
-                  <h3 className="font-display text-2xl font-semibold text-ink tracking-tight">
-                    {playbook.title}
-                  </h3>
-                  <p className="text-sm font-medium text-muted">
-                    {playbook.subtitle}
-                  </p>
-                  <p className="text-body text-sm leading-relaxed mt-4">
-                    {playbook.summary}
-                  </p>
-                </div>
-
-                <div className="mt-8 pt-6 border-t border-hairline flex items-center justify-between">
-                  <div>
-                    <span className="font-display text-2xl font-semibold text-ink">₹{playbook.price}</span>
-                  </div>
-
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={() => navigate(`/playbooks/${playbook.slug}`)}
-                      className="bg-canvas border border-hairline hover:bg-surface-soft px-4 py-2 rounded-md text-sm font-semibold text-ink transition-colors"
-                    >
-                      View
-                    </button>
-
-                    {hasPurchased ? (
-                      <button
-                        onClick={() => navigate(`/reader/${playbook.slug}`)}
-                        className="bg-primary text-on-primary hover:bg-primary-active px-4 py-2 rounded-md text-sm font-semibold transition-colors"
-                      >
-                        Open
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleAcquireClick(playbook.slug, playbook.price)}
-                        disabled={acquiringSlug === playbook.slug}
-                        className="bg-primary text-on-primary hover:bg-primary-active px-4 py-2 rounded-md text-sm font-semibold transition-colors disabled:opacity-80 flex items-center justify-center gap-2 min-w-[72px]"
-                      >
-                        {acquiringSlug === playbook.slug ? (
-                          <>
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
-                              className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full"
-                            />
-                            Acquiring...
-                          </>
-                        ) : (
-                          'Acquire'
-                        )}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {filteredPlaybooks.length === 0 && (
-          <div className="text-center py-24 bg-surface-soft rounded-lg mt-6">
-            <p className="text-muted text-sm font-medium">No playbooks found matching your criteria.</p>
-            <button
-              onClick={() => { handleTrackSelect('all'); setSearchQuery(''); }}
-              className="mt-4 text-sm font-semibold text-ink hover:underline"
-            >
-              Clear filters
-            </button>
+    <div className="w-full bg-canvas min-h-screen pb-32">
+      <div className="max-w-[1860px] mx-auto px-6 pt-12">
+        {/* Top Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16 animate-fade-in-up">
+          <div className="lg:col-span-4 flex flex-col justify-center">
+            <h1 className="text-4xl md:text-5xl font-display font-bold mb-4 text-text-primary">Playbooks</h1>
+            <p className="text-text-secondary mb-8 leading-relaxed">
+              Well-researched guides, step-by-step instructions, and free learning resources to help you enable AI in your work the right way.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button icon={<Lock className="w-4 h-4" />} onClick={() => setAuthModalOpen(true)}>
+                Sign In to Access
+              </Button>
+              <Button variant="outline" icon={<Search className="w-4 h-4" />}>
+                Research with AI
+              </Button>
+            </div>
           </div>
-        )}
-      </section>
+          
+          <div className="lg:col-span-8 bg-gradient-lavender rounded-[2rem] p-10 flex flex-col md:flex-row items-center gap-8 shadow-lavender overflow-hidden relative">
+            <div className="relative z-10 flex-1">
+              <h2 className="text-2xl font-bold mb-4">Enable AI in your work the right way</h2>
+              <p className="text-text-secondary mb-8">Access well-researched guides, practical instructions, and free resources to get the most out of AI.</p>
+              <div className="flex flex-wrap gap-3">
+                {metadataTags.map((tag, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg text-sm text-text-secondary shadow-sm font-medium">
+                    <span className="text-brand-primary">{tag.icon}</span> {tag.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="relative z-10 w-48 h-48 flex-shrink-0 flex items-center justify-center">
+                {/* 3D Books Placeholder */}
+                <div className="w-full h-full relative flex items-center justify-center">
+                  <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-2xl rotate-6 shadow-xl"></div>
+                  <div className="absolute inset-0 bg-brand-primary/10 rounded-2xl -rotate-3 border border-white"></div>
+                  <BookOpen className="w-20 h-20 text-brand-primary relative z-20" />
+                </div>
+            </div>
+          </div>
+        </div>
 
+        {/* Category Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          <Card padding="xl" className="flex items-center gap-8 relative overflow-hidden group hover:shadow-card cursor-pointer">
+            <div className="absolute right-0 top-0 w-64 h-64 bg-brand-lavender rounded-full blur-3xl opacity-40 transform translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></div>
+            <div className="w-24 h-24 rounded-[2rem] bg-brand-lavender text-brand-primary flex items-center justify-center flex-shrink-0 shadow-inner relative z-10">
+              <ClipboardList className="w-12 h-12" />
+            </div>
+            <div className="relative z-10">
+              <h3 className="text-2xl font-bold mb-2">Task-Specific Playbooks</h3>
+              <p className="text-text-secondary mb-6">Step-by-step guides for specific tasks to help you work smarter and faster with AI.</p>
+              <button onClick={() => navigate('/playbooks/all?category=task')} className="text-brand-primary font-semibold flex items-center group-hover:gap-2 transition-all">
+                Explore Task Playbooks <ArrowRight className="w-4 h-4 ml-1" />
+              </button>
+            </div>
+          </Card>
+
+          <Card padding="xl" className="flex items-center gap-8 relative overflow-hidden group hover:shadow-card cursor-pointer">
+            <div className="absolute right-0 top-0 w-64 h-64 bg-brand-lavender rounded-full blur-3xl opacity-40 transform translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></div>
+            <div className="w-24 h-24 rounded-[2rem] bg-brand-lavender text-brand-primary flex items-center justify-center flex-shrink-0 shadow-inner relative z-10">
+              <Briefcase className="w-12 h-12" />
+            </div>
+            <div className="relative z-10">
+              <h3 className="text-2xl font-bold mb-2">Industry-Specific Playbooks</h3>
+              <p className="text-text-secondary mb-6">Domain-focused playbooks tailored for your industry's unique challenges.</p>
+              <button onClick={() => navigate('/playbooks/all?category=industry')} className="text-brand-primary font-semibold flex items-center group-hover:gap-2 transition-all">
+                Explore Industry Playbooks <ArrowRight className="w-4 h-4 ml-1" />
+              </button>
+            </div>
+          </Card>
+        </div>
+
+        {/* What You'll Get */}
+        <div className="mb-20 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <h2 className="text-2xl font-display font-bold mb-8">What You'll Get</h2>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+            {whatYouGet.map((item, i) => (
+              <div key={i} className="flex flex-col items-center text-center p-4">
+                <div className="w-14 h-14 bg-white shadow-soft rounded-2xl text-brand-primary flex items-center justify-center mb-4 relative">
+                  {item.icon}
+                  {item.badge && (
+                    <span className="absolute -top-2 -right-2 bg-brand-lavender text-brand-primary text-[10px] font-bold px-2 py-0.5 rounded-full border border-white">
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+                <h4 className="font-bold text-sm mb-2 text-text-primary">{item.title}</h4>
+                <p className="text-xs text-text-secondary leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Popular Playbooks Preview */}
+        <div className="mb-12 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-display font-bold">
+              {activeFilter === 'task' ? 'Task-Specific Playbooks' : activeFilter === 'industry' ? 'Industry-Specific Playbooks' : 'All Playbooks'}
+            </h2>
+            {activeFilter !== 'all' && (
+              <button onClick={() => navigate('/playbooks/all')} className="text-brand-primary font-semibold flex items-center hover:gap-1 transition-all text-sm">
+                View all playbooks <ArrowRight className="w-4 h-4 ml-1" />
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {filteredPlaybooks.map((playbook, i) => (
+              <Card key={i} className="flex flex-col hover:border-brand-primary/30 transition-colors group cursor-pointer relative overflow-hidden" onClick={() => navigate(`/playbooks/${playbook.slug}`)}>
+                <div className="mb-4">
+                  <Badge variant={i % 2 === 0 ? "lavender" : "mint"}>
+                    {i % 2 === 0 ? "Task-Specific" : "Industry-Specific"}
+                  </Badge>
+                </div>
+                <h4 className="text-xl font-bold mb-3">{playbook.title}</h4>
+                <p className="text-text-secondary text-sm mb-8 flex-1">{playbook.summary}</p>
+                
+                <div className="flex items-center justify-between text-xs text-text-secondary pt-4 border-t border-border-light">
+                  <div className="flex items-center gap-4">
+                    <span className="font-medium px-2 py-1 bg-canvas rounded-md capitalize">{playbook.track}</span>
+                    <span className="flex items-center gap-1">â—‹ {playbook.chapters.reduce((sum, ch) => sum + ch.estimatedMinutes, 0)} min read</span>
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-canvas flex items-center justify-center text-text-tertiary group-hover:bg-brand-lavender group-hover:text-brand-primary transition-colors">
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom Lock Banner */}
+        <Card variant="elevated" padding="md" className="flex flex-col sm:flex-row items-center justify-between gap-6 bg-canvas-white animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+          <div className="flex items-center gap-4">
+             <div className="w-12 h-12 rounded-full bg-brand-lavender text-brand-primary flex items-center justify-center flex-shrink-0">
+               <Lock className="w-5 h-5" />
+             </div>
+             <p className="text-text-secondary font-medium">
+               Sign in to unlock all playbooks, save your favorites, and track your progress.
+             </p>
+          </div>
+          <Button icon={<Lock className="w-4 h-4" />} className="flex-shrink-0" onClick={() => setAuthModalOpen(true)}>
+            Sign In to Access
+          </Button>
+        </Card>
+      </div>
     </div>
   );
-};
+}
+
+

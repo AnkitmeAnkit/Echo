@@ -10,6 +10,7 @@ interface AppContextType {
   bookings: ConsultingBooking[];
   offlineMode: boolean;
   notificationsEnabled: boolean;
+  isDarkMode: boolean;
   isAuthModalOpen: boolean;
   isLoading: boolean;
   
@@ -25,6 +26,7 @@ interface AppContextType {
   bookConsulting: (booking: Omit<ConsultingBooking, 'id' | 'submittedAt'>) => void;
   setOfflineMode: (offline: boolean) => void;
   toggleNotifications: () => void;
+  toggleDarkMode: () => void;
   navigate: (path: string) => void;
   saveIntent: (slug: string, price: number) => void;
   getAndClearIntent: () => { slug: string; price: number } | null;
@@ -45,6 +47,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [bookings, setBookings] = useState<ConsultingBooking[]>([]);
   const [offlineMode, setOfflineMode] = useState<boolean>(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [isAuthModalOpen, setAuthModalOpen] = useState<boolean>(false);
 
   // Helper: Route Parser
@@ -143,6 +146,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // 5. Notifications state
     const savedNotif = localStorage.getItem('eg_notifications') === '1';
     setNotificationsEnabled(savedNotif);
+
+    // 6. Dark Mode state
+    const savedTheme = localStorage.getItem('eg_theme');
+    setIsDarkMode(savedTheme === 'dark');
   }, []);
 
   // Action: Navigate
@@ -251,6 +258,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setNotificationsEnabled(updated);
   };
 
+  // Action: Toggle Dark Mode
+  const toggleDarkMode = () => {
+    const updated = !isDarkMode;
+    localStorage.setItem('eg_theme', updated ? 'dark' : 'light');
+    setIsDarkMode(updated);
+  };
+
   // Handle Intent Persistence
   const saveIntent = (slug: string, price: number) => {
     sessionStorage.setItem('eg_purchase_intent', JSON.stringify({ slug, price }));
@@ -277,6 +291,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       bookings,
       offlineMode,
       notificationsEnabled,
+      isDarkMode,
       setLoading,
       login,
       register,
@@ -288,6 +303,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       bookConsulting,
       setOfflineMode,
       toggleNotifications,
+      toggleDarkMode,
       navigate,
       saveIntent,
       getAndClearIntent,

@@ -1,15 +1,10 @@
 import React from 'react';
-import EchoRobotLogo from './EchoRobotLogo';
 import { Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export const LoadingScreen: React.FC = () => {
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-canvas text-ink font-sans">
-      
-      {/* Decorative Grid Background for a subtle technical feel matching the main design */}
-      <div className="absolute inset-0 z-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
-
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-canvas-white text-text-primary font-sans">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -18,39 +13,32 @@ export const LoadingScreen: React.FC = () => {
       >
         <div className="relative flex items-center justify-center">
           {/* Subtle glow behind logo */}
-          <div className="absolute w-32 h-32 bg-surface-strong rounded-full blur-[40px] opacity-50 animate-pulse" />
+          <div className="absolute w-32 h-32 bg-brand-lavender rounded-full blur-[40px] opacity-50 animate-pulse" />
           
-          <div className="relative z-10">
-            <EchoRobotLogo size={80} />
+          <div className="relative z-10 w-20 h-20 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-4xl shadow-lavender">
+            <span className="animate-pulse">e</span>g
           </div>
 
           {/* Spinner ring around the logo */}
           <motion.div 
             animate={{ rotate: 360 }}
             transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-            className="absolute inset-[-20px] rounded-full border border-dashed border-muted-soft opacity-30"
+            className="absolute inset-[-20px] rounded-full border border-dashed border-brand-primary opacity-30"
           />
         </div>
 
         <div className="flex flex-col items-center space-y-3">
           <div className="flex items-center space-x-3">
-            <Loader2 className="w-4 h-4 text-ink animate-spin" />
-            <h2 className="font-display text-lg font-semibold tracking-widest uppercase text-ink">
-              Processing
+            <Loader2 className="w-5 h-5 text-brand-primary animate-spin" />
+            <h2 className="font-display text-lg font-bold tracking-wide text-text-primary">
+              Loading
             </h2>
           </div>
-          <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-muted">
-            Synchronizing state
+          <p className="text-xs text-text-tertiary">
+            Preparing your experience...
           </p>
         </div>
       </motion.div>
-
-      {/* Decorative Corner Elements */}
-      <div className="absolute bottom-8 left-8 flex items-center space-x-2 font-mono text-[10px] text-muted uppercase tracking-widest opacity-60">
-        <span className="w-1.5 h-1.5 rounded-full bg-ink animate-pulse" />
-        <span>Network Active</span>
-      </div>
     </div>
   );
 };
-

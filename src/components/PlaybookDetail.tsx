@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useAppState } from '../store';
 import { PLAYBOOKS } from '../data';
 import { Lock, ArrowLeft } from 'lucide-react';
@@ -56,7 +56,7 @@ export const PlaybookDetail: React.FC = () => {
 
       if (insertError) throw new Error(insertError.message);
 
-      // Success — redirect to library
+      // Success â€” redirect to library
       navigate('/dashboard');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong.';
@@ -76,7 +76,7 @@ export const PlaybookDetail: React.FC = () => {
     <div className="bg-canvas text-ink font-sans pb-24">
       
       {/* Header with back button */}
-      <section className="max-w-7xl mx-auto px-6 pt-12 pb-8">
+      <section className="max-w-[1860px] mx-auto px-6 pt-12 pb-8">
         <button 
           onClick={() => navigate('/playbooks')}
           className="text-muted hover:text-ink flex items-center space-x-2 transition-colors cursor-pointer text-sm font-semibold mb-8"
@@ -87,7 +87,7 @@ export const PlaybookDetail: React.FC = () => {
       </section>
 
       {/* Main Grid content segment */}
-      <section className="max-w-7xl mx-auto px-6">
+      <section className="max-w-[1860px] mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           
           {/* Left Column: Cover and info specs */}
@@ -107,7 +107,7 @@ export const PlaybookDetail: React.FC = () => {
             <div className="border border-hairline p-8 space-y-6 bg-canvas rounded-lg shadow-sm">
               <div className="flex justify-between items-center border-b border-hairline pb-4">
                 <span className="text-sm font-medium text-muted">Price</span>
-                <span className="text-3xl font-display font-semibold text-ink">₹{playbook.price}</span>
+                <span className="text-3xl font-display font-semibold text-ink">â‚¹{playbook.price}</span>
               </div>
 
               <div className="space-y-4">
@@ -232,3 +232,5 @@ export const PlaybookDetail: React.FC = () => {
     </div>
   );
 };
+
+

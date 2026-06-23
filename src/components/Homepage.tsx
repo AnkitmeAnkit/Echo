@@ -1,548 +1,220 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useAppState } from '../store';
-import { PLAYBOOKS } from '../data';
-import { motion, AnimatePresence } from 'motion/react';
-import { Check, X } from 'lucide-react';
-import TerminalScreen from './TerminalScreen';
-import { supabase } from '../supabaseClient';
+import { Button } from './Button';
+import { Card } from './Card';
+import { Stepper } from './Stepper';
+import { Badge } from './Badge';
+import { 
+  Zap, ArrowRight, BookOpen, Target, Briefcase, FileCheck, 
+  Wallet, HeadphonesIcon, MessageSquare, IndianRupee, Rocket,
+  Users, Award, Clock, ShieldCheck, CheckCircle2, PhoneCall
+} from 'lucide-react';
 
-interface PlaybookBlueprint {
-  id: string;
-  tag: string;
-  title: string;
-  description: string;
-  price: number;
-  features: string[];
-}
+export function Homepage() {
+  const { navigate } = useAppState();
 
-const BLUEPRINTS: PlaybookBlueprint[] = [
-  {
-    id: 'hyper-scale-backend',
-    tag: 'Professional Track',
-    title: 'AI Playbooks',
-    description: "Learn to push AI platforms to their absolute limit. Get the exact frameworks to integrate tools like Claude into specific workflows whether you are 'vibe coding' a web application from scratch or a data analyst automating your daily reporting to outperform the competition.",
-    price: 49,
-    features: [
-      'Advanced Claude & GPT Prompt Library',
-      'Task-Specific Integration Workflows',
-      'Video Implementation Guide',
-      'Execution Checklist & Templates'
-    ]
-  },
-  {
-    id: 'digital-couture-design',
-    tag: 'Custom Track',
-    title: 'Custom AI Architecture',
-    description: "Have a unique execution goal? We build the blueprint for you. Whether you are a non-technical founder establishing a solo venture or a data analyst looking to automate your specific toolset, we will custom-architect a definitive, step-by-step playbook tailored exactly to your workflow.",
-    price: 399,
-    features: [
-      'Tailored System Integration Guide',
-      'Custom Automation Workflows',
-      'Ready-to-Use Personalized Prompts',
-      'Step-by-Step Execution Plan'
-    ]
-  },
-  {
-    id: 'product-glitch-operations',
-    tag: 'Consulting Track',
-    title: 'Elite 1-on-1 Implementation',
-    description: 'Direct-access consulting to wire up your specific automation systems. Fill out your intake form to book a private session where we audit your stack, troubleshoot technical bottlenecks, and actively build the infrastructure required to scale your output.',
-    price: 999,
-    features: [
-      '1-on-1 Strategic Consulting Call',
-      'Comprehensive Tech Stack Audit',
-      'Custom Integration & Scripting',
-      'Direct-Access Advisory Channel'
-    ]
-  }
-];
+  const processSteps = [
+    { icon: <FileCheck className="w-8 h-8" />, title: "Choose a Problem", description: "Pick a listed problem or submit your own for just ₹9." },
+    { icon: <Wallet className="w-8 h-8" />, title: "Pay ₹9 to Connect", description: "Make a secure payment and unlock consultant review & call-back." },
+    { icon: <HeadphonesIcon className="w-8 h-8" />, title: "Discuss Your Need", description: "Our consultant will call you to understand the problem in detail." },
+    { icon: <IndianRupee className="w-8 h-8" />, title: "Receive Final Pricing", description: "Get the final execution price after discussion. No hidden charges." },
+    { icon: <Rocket className="w-8 h-8" />, title: "Start the Work", description: "Approve the price and we'll begin executing your solution." }
+  ];
 
-export const Homepage: React.FC = () => {
-  const { navigate, currentUser, purchasedSlugs, saveIntent } = useAppState();
-  const [selectedCard, setSelectedCard] = useState<PlaybookBlueprint | null>(null);
-  const [isBookingExpanded, setIsBookingExpanded] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitSuccess, setIsSubmitSuccess] = useState(false);
+  const stats = [
+    { icon: <BookOpen />, value: "250+", label: "Playbooks", sub: "Actionable AI guides" },
+    { icon: <Users />, value: "1,200+", label: "Professionals", sub: "Using our platform" },
+    { icon: <Award />, value: "98%", label: "Success Rate", sub: "Projects executed successfully" },
+    { icon: <Clock />, value: "24hrs", label: "Avg. Response", sub: "Consultant connect time" },
+  ];
 
-  // Disable body scroll when modal is active
-  useEffect(() => {
-    if (selectedCard || isBookingExpanded) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-      if (!isBookingExpanded) {
-        setTimeout(() => setIsSubmitSuccess(false), 300);
-      }
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [selectedCard, isBookingExpanded]);
-
-  const handleBookingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    const formData = new FormData(e.currentTarget);
-    
-    try {
-      const { error } = await supabase
-        .from('free_consultancy')
-        .insert([
-          {
-            full_name: formData.get('fullName'),
-            email: formData.get('email'),
-            phone_number: formData.get('phone'),
-            goals: formData.get('goals')
-          }
-        ]);
-        
-      if (error) throw error;
-      
-      setIsSubmitSuccess(true);
-    } catch (error) {
-      console.error('Error submitting form:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleAcquire = (slug: string, price: number) => {
-    if (!currentUser) {
-      saveIntent(slug, price);
-      navigate('/auth');
-    } else {
-      navigate(`/checkout/${slug}`);
-    }
-  };
-
-  const springTransition = { type: 'spring' as const, bounce: 0.2, duration: 0.6 };
+  const whyChooseUs = [
+    { icon: <HeadphonesIcon className="w-6 h-6" />, title: "Expert Guidance", desc: "Learn from seasoned AI professionals" },
+    { icon: <CheckCircle2 className="w-6 h-6" />, title: "Practical & Actionable", desc: "Real-world solutions that deliver results" },
+    { icon: <ShieldCheck className="w-6 h-6" />, title: "Secure & Private", desc: "Your data is safe and protected" },
+    { icon: <ShieldCheck className="w-6 h-6" />, title: "Transparent Process", desc: "Clear steps, honest and fair pricing" },
+  ];
 
   return (
-    <div className="bg-canvas text-ink font-sans pb-24">
-
-      {/* Hero Section */}
-      <section className="w-full px-6 md:px-10 pt-16 lg:pt-0 min-h-[calc(100vh-64px)] flex items-center">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-
-          <div className="lg:col-span-6 flex flex-col justify-center space-y-8">
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="font-display text-5xl md:text-7xl font-semibold leading-tight text-ink tracking-tight pr-4"
-            >
-              Cut Through the AI Hype. Execute with Precision.
-            </motion.h1>
-
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="text-lg text-body md:w-4/5 leading-relaxed"
-            >
-              EchoGlitch is a premium ecosystem delivering actionable, densified AI Playbooks and 1-on-1 consulting for ambitious professionals. No generic tutorials. Just proven blueprints and pure execution.
-            </motion.p>
-
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="pt-4 flex flex-wrap gap-4"
-            >
-              <button
-                onClick={() => navigate('/playbooks')}
-                className="bg-primary text-on-primary hover:bg-[#1a1a1a] hover:scale-[1.02] transition-all duration-200 px-6 py-3 rounded-md font-semibold text-sm flex items-center justify-center space-x-2 h-12 cursor-pointer"
-              >
-                <span>Browse Playbooks</span>
-              </button>
-
-              <button
-                onClick={() => navigate('/consulting')}
-                className="bg-canvas border border-hairline text-ink hover:bg-[#f5f5f5] transition-colors duration-200 px-6 py-3 rounded-md font-semibold text-sm flex items-center justify-center h-12 cursor-pointer"
-              >
-                <span>Book Consulting</span>
-              </button>
-            </motion.div>
-          </div>
-
-          <div className="lg:col-span-6 flex items-center justify-center lg:justify-center w-full">
-            <TerminalScreen />
-          </div>
-
-        </div>
-      </section>
-
-      {/* Featured Playbooks Section */}
-      <section className="w-full px-6 md:px-10 py-24">
-        <div className="text-center mb-16 space-y-4">
-          <h2 className="font-display text-4xl md:text-5xl font-semibold text-ink tracking-tight">
-            Actionable AI Blueprints
-          </h2>
-          <p className="text-body text-lg max-w-2xl mx-auto">
-            Tactical workflows and system playbooks designed for specific careers, engineered to eliminate noise.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {BLUEPRINTS.map((item, index) => {
-            const hasPurchased = purchasedSlugs.includes(item.id);
-            return (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                whileHover={{ y: -4, boxShadow: "0 10px 25px rgba(0,0,0,0.05)" }}
-                transition={{ 
-                  opacity: { delay: index * 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] },
-                  y: { delay: index * 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] },
-                  boxShadow: { duration: 0.3 },
-                }}
-                className="bg-surface-card rounded-lg p-8 flex flex-col justify-between border border-hairline/60"
-              >
-                <div className="space-y-4">
-                  <motion.div
-                    layoutId={`tag-${item.id}`}
-                    transition={springTransition}
-                    className="inline-block bg-canvas px-3 py-1 rounded-pill text-xs font-medium border border-hairline text-muted self-start"
-                  >
-                    {item.tag}
-                  </motion.div>
-
-                  <motion.h3
-                    layoutId={`title-${item.id}`}
-                    transition={springTransition}
-                    className="font-display text-2xl font-semibold text-ink tracking-tight"
-                  >
-                    {item.title}
-                  </motion.h3>
-
-                  <motion.p
-                    layoutId={`desc-${item.id}`}
-                    transition={springTransition}
-                    className="text-body text-sm leading-relaxed mt-4"
-                  >
-                    {item.description}
-                  </motion.p>
-                </div>
-
-                <div className="mt-8 pt-6 border-t border-hairline flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-muted uppercase tracking-wider font-semibold">Starting from</span>
-                    <motion.span
-                      layoutId={`price-text-${item.id}`}
-                      transition={springTransition}
-                      className="font-display text-2xl font-semibold text-ink"
-                    >
-                      ₹{item.price}
-                    </motion.span>
-                  </div>
-
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={() => setSelectedCard(item)}
-                      className="bg-canvas border border-hairline text-ink hover:bg-[#f5f5f5] transition-colors duration-200 px-4 py-2 rounded-md text-sm font-semibold cursor-pointer"
-                    >
-                      View
-                    </button>
-
-                    <button
-                      onClick={() => navigate(item.id === 'hyper-scale-backend' ? '/playbooks' : '/consulting')}
-                      className="bg-primary text-on-primary hover:bg-[#1a1a1a] hover:scale-[1.02] transition-all duration-200 px-4 py-2 rounded-md text-sm font-semibold cursor-pointer"
-                    >
-                      Explore
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Expanded Modal (Active State) */}
-      <AnimatePresence>
-        {selectedCard && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              key="backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedCard(null)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-md z-[9998] cursor-pointer"
-            />
-
-            {/* Expanded Card Container */}
-            <div
-              className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-              onClick={() => setSelectedCard(null)}
-            >
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-white/85 backdrop-blur-xl border border-white/40 shadow-2xl rounded-2xl max-w-2xl w-full overflow-hidden relative text-zinc-900 pointer-events-auto flex flex-col max-h-[90vh]"
-              >
-                {/* Close Button */}
-                <button
-                  onClick={() => setSelectedCard(null)}
-                  className="absolute top-4 right-4 p-2 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100/50 rounded-full transition-colors cursor-pointer z-10"
-                  aria-label="Close"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                {/* Content Area */}
-                <div className="p-8 space-y-6 overflow-y-auto flex-1">
-                  <div className="space-y-4">
-                    <motion.div
-                      layoutId={`tag-${selectedCard.id}`}
-                      transition={springTransition}
-                      className="inline-block bg-zinc-100 px-3 py-1 rounded-pill text-xs font-medium border border-zinc-200 text-zinc-600 self-start"
-                    >
-                      {selectedCard.tag}
-                    </motion.div>
-
-                    <motion.h3
-                      layoutId={`title-${selectedCard.id}`}
-                      transition={springTransition}
-                      className="font-display text-3xl md:text-4xl font-semibold text-zinc-900 tracking-tight"
-                    >
-                      {selectedCard.title}
-                    </motion.h3>
-
-                    <motion.p
-                      layoutId={`desc-${selectedCard.id}`}
-                      transition={springTransition}
-                      className="text-zinc-600 text-base leading-relaxed"
-                    >
-                      {selectedCard.description}
-                    </motion.p>
-                  </div>
-
-                  {/* Checklist Section */}
-                  <div className="pt-6 border-t border-zinc-100 space-y-4">
-                    <h4 className="text-xs font-mono uppercase tracking-widest text-zinc-400 font-semibold">
-                      What's Included in this Blueprint
-                    </h4>
-                    <ul className="space-y-3">
-                      {selectedCard.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start space-x-3 text-zinc-700 text-sm font-medium">
-                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center mt-0.5">
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
-                          </span>
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Sticky Footer / CTA */}
-                <div className="bg-zinc-50/90 border-t border-zinc-100 p-8 flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">Starting from</span>
-                    <motion.span
-                      layoutId={`price-text-${selectedCard.id}`}
-                      transition={springTransition}
-                      className="font-display text-3xl font-semibold text-zinc-900"
-                    >
-                      ₹{selectedCard.price}
-                    </motion.span>
-                  </div>
-
-                  <div>
-                    <button
-                      onClick={() => {
-                        setSelectedCard(null);
-                        navigate(selectedCard.id === 'hyper-scale-backend' ? '/playbooks' : '/consulting');
-                      }}
-                      className="bg-primary text-on-primary hover:bg-[#1a1a1a] hover:scale-[1.02] transition-all duration-200 px-6 py-3 rounded-md text-sm font-semibold shadow-md cursor-pointer"
-                    >
-                      Explore
-                    </button>
-                  </div>
-                </div>
-
-              </motion.div>
+    <div className="w-full">
+      {/* Hero Section — tightened vertical padding, no bottom gap */}
+      <section className="relative pt-20 pb-20 overflow-hidden bg-canvas">
+        <div className="w-full px-8 lg:px-16 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="animate-fade-in-up">
+            <Badge variant="lavender" className="mb-6">
+              <Zap className="w-3 h-3 mr-1" /> AI Playbooks & Expert Solutions
+            </Badge>
+            <h1 className="text-5xl lg:text-7xl font-display font-bold leading-[1.1] mb-6">
+              Find the Right <span className="text-brand-primary">Solution.</span><br />
+              Execute with <span className="text-brand-primary">Confidence.</span>
+            </h1>
+            <p className="text-lg text-text-secondary mb-10 max-w-xl leading-relaxed">
+              Access expert-crafted playbooks or get tailored solutions for your unique challenges. Start with just ₹9, connect with our consultants, and receive the final pricing after discussion.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center gap-4 mb-12">
+              <Button size="lg" icon={<BookOpen className="w-5 h-5" />} onClick={() => navigate('/playbooks')}>
+                Explore Playbooks
+              </Button>
+              <Button variant="secondary" size="lg" icon={<Zap className="w-5 h-5" />} onClick={() => navigate('/solutions')}>
+                Find a Solution
+              </Button>
             </div>
-          </>
-        )}
-      </AnimatePresence>
+            <div className="flex items-center gap-4">
+              <div className="flex -space-x-3">
+                {[1, 2, 3, 4].map(i => (
+                  <img key={i} src={`https://api.dicebear.com/7.x/notionists/svg?seed=${i}`} alt="user" className="w-10 h-10 rounded-full border-2 border-white bg-brand-lavender" />
+                ))}
+              </div>
+              <div className="text-sm">
+                <p className="font-semibold">Trusted by 1,200+ professionals</p>
+                <div className="flex items-center text-yellow-400">
+                  {'★★★★★'.split('').map((star, i) => <span key={i}>{star}</span>)}
+                  <span className="text-text-secondary ml-2 font-medium">4.9/5</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Hero Visual */}
+          <div className="relative animate-fade-in-up flex items-center justify-center">
+            <div className="relative w-full max-w-lg aspect-square mx-auto">
+              <div className="absolute inset-0 bg-gradient-lavender rounded-[3rem] transform rotate-3 opacity-50 blur-xl"></div>
+              <div className="absolute inset-0 bg-gradient-lavender rounded-[3rem] transform -rotate-3 shadow-lavender border border-white/50 p-8 flex flex-col items-center justify-center relative z-10 backdrop-blur-sm">
+                <div className="grid grid-cols-2 gap-6 w-full max-w-xs relative z-20">
+                  <div className="bg-white rounded-2xl p-6 shadow-soft transform -translate-y-4 hover:-translate-y-6 transition-transform">
+                    <div className="w-12 h-12 bg-brand-lavender text-brand-primary rounded-full flex items-center justify-center mb-4 mx-auto">
+                      <Target className="w-6 h-6" />
+                    </div>
+                    <p className="text-center font-bold text-sm">AI Playbooks</p>
+                  </div>
+                  <div className="bg-white rounded-2xl p-6 shadow-soft transform translate-y-4 hover:translate-y-2 transition-transform">
+                    <div className="w-12 h-12 bg-brand-lavender text-brand-primary rounded-full flex items-center justify-center mb-4 mx-auto">
+                      <Target className="w-6 h-6" />
+                    </div>
+                    <p className="text-center font-bold text-sm">Expert Solutions</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      {/* CTA Section */}
-      <section className="w-full px-6 md:px-10 py-24">
-        {!isBookingExpanded && (
-          <motion.div
-            onClick={() => setIsBookingExpanded(true)}
-            whileHover={{ y: -4, boxShadow: "0 10px 25px rgba(0,0,0,0.05)" }}
-            transition={{ duration: 0.3 }}
-            className="bg-surface-card rounded-lg p-12 md:p-24 text-center max-w-4xl mx-auto space-y-6 cursor-pointer border border-hairline/60 flex flex-col items-center justify-center"
-          >
-            <motion.h2
-              layoutId="booking-title"
-              transition={{ type: "spring", bounce: 0.15, duration: 0.6 }}
-              className="font-display text-3xl md:text-4xl font-semibold text-ink tracking-tight"
-            >
+      {/* Core Offerings */}
+      <section className="py-16 bg-canvas-white">
+        <div className="w-full px-8 lg:px-16 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <Card padding="xl" className="relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-lavender rounded-full blur-3xl opacity-50 transform translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform duration-700"></div>
+            <Badge variant="outline" className="mb-6"><BookOpen className="w-3 h-3 mr-1"/> PLAYBOOKS</Badge>
+            <h2 className="text-3xl font-display font-bold mb-4">Learn. Apply. Master AI.</h2>
+            <p className="text-text-secondary mb-8 max-w-sm">Step-by-step playbooks to help you enable AI in your work the right way. Well-researched, practical and easy to follow.</p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-canvas p-4 rounded-xl">
+                <h4 className="font-bold text-sm mb-1">Task-Specific Playbooks</h4>
+                <p className="text-xs text-text-secondary mb-4">Guides for specific tasks to help you work faster</p>
+                <button onClick={() => navigate('/playbooks/all?category=task')} className="text-brand-primary text-sm font-semibold flex items-center hover:gap-2 transition-all">
+                  Explore Playbooks <ArrowRight className="w-4 h-4 ml-1" />
+                </button>
+              </div>
+              <div className="bg-canvas p-4 rounded-xl">
+                <h4 className="font-bold text-sm mb-1">Industry-Specific Playbooks</h4>
+                <p className="text-xs text-text-secondary mb-4">Domain-focused playbooks for your industry</p>
+                <button onClick={() => navigate('/playbooks/all?category=industry')} className="text-brand-primary text-sm font-semibold flex items-center hover:gap-2 transition-all">
+                  Explore Playbooks <ArrowRight className="w-4 h-4 ml-1" />
+                </button>
+              </div>
+            </div>
+          </Card>
+
+          <Card padding="xl" className="relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-mint rounded-full blur-3xl opacity-30 transform translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform duration-700"></div>
+            <Badge variant="mint" className="mb-6"><Zap className="w-3 h-3 mr-1"/> SOLUTIONS</Badge>
+            <h2 className="text-3xl font-display font-bold mb-4">Get Expert Help, When You Need It</h2>
+            <p className="text-text-secondary mb-8 max-w-sm">Choose from predefined problems or submit your own. Our consultants will call you, understand your needs, and share the final execution price.</p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-canvas p-4 rounded-xl">
+                <h4 className="font-bold text-sm mb-1">Browse Predefined Problems</h4>
+                <p className="text-xs text-text-secondary mb-4">Pick a common problem and connect for just ₹9</p>
+                <button onClick={() => navigate('/solutions')} className="text-success text-sm font-semibold flex items-center hover:gap-2 transition-all">
+                  Explore Problems <ArrowRight className="w-4 h-4 ml-1" />
+                </button>
+              </div>
+              <div className="bg-canvas p-4 rounded-xl">
+                <h4 className="font-bold text-sm mb-1">Submit Your Own Problem</h4>
+                <p className="text-xs text-text-secondary mb-4">Can't find your problem? Submit it for just ₹9</p>
+                <button onClick={() => navigate('/solutions')} className="text-success text-sm font-semibold flex items-center hover:gap-2 transition-all">
+                  Submit Now <ArrowRight className="w-4 h-4 ml-1" />
+                </button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="py-16 bg-canvas">
+        <div className="w-full px-8 lg:px-16">
+          <h2 className="text-3xl font-display font-bold mb-12">How It Works</h2>
+          <Stepper steps={processSteps} />
+        </div>
+      </section>
+
+      {/* Stats and Why Choose Us */}
+      <section className="py-16 bg-canvas-white">
+        <div className="w-full px-8 lg:px-16">
+          <Card variant="elevated" padding="xl" className="mb-16">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:divide-x divide-border-light/50">
+              {stats.map((stat, i) => (
+                <div key={i} className={`flex flex-col items-center text-center ${i % 2 !== 0 ? 'sm:pl-8' : ''} ${i !== 0 ? 'md:pl-8' : ''}`}>
+                  <div className="w-12 h-12 bg-brand-lavender text-brand-primary rounded-full flex items-center justify-center mb-4">
+                    {stat.icon}
+                  </div>
+                  <h3 className="text-3xl font-display font-bold mb-1">{stat.value}</h3>
+                  <p className="font-semibold text-text-primary mb-1">{stat.label}</p>
+                  <p className="text-sm text-text-secondary">{stat.sub}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <h2 className="text-3xl font-display font-bold mb-10">Why Professionals Choose Echo Glitch</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {whyChooseUs.map((feature, i) => (
+              <div key={i} className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-brand-lavender text-brand-primary flex-shrink-0 flex items-center justify-center">
+                  {feature.icon}
+                </div>
+                <div>
+                  <h4 className="font-bold mb-1">{feature.title}</h4>
+                  <p className="text-sm text-text-secondary">{feature.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Bottom CTA */}
+      <section className="py-16 bg-canvas">
+        <div className="w-full px-8 lg:px-16">
+          <div className="bg-gradient-blue-purple rounded-3xl p-10 flex flex-col md:flex-row items-center justify-between text-white shadow-lavender gap-6">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md flex-shrink-0">
+                <PhoneCall className="w-8 h-8" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Have a question before getting started?</h2>
+                <p className="text-white/80">Talk to our team and find the right way forward.</p>
+              </div>
+            </div>
+            <Button variant="secondary" size="lg" icon={<ArrowRight className="w-5 h-5" />} iconPosition="right">
               Book a Free Consultancy Call
-            </motion.h2>
-            <motion.p
-              layoutId="booking-desc"
-              transition={{ type: "spring", bounce: 0.15, duration: 0.6 }}
-              className="text-body text-lg max-w-2xl mx-auto"
-            >
-              Schedule a high-touch, complimentary session to understand our ecosystem, map out your custom automation workflows, and see exactly how our playbooks can accelerate your mastery.
-            </motion.p>
-
-            <div className="pt-4 flex flex-wrap justify-center gap-4">
-              <button
-                className="bg-primary text-on-primary hover:bg-primary-active px-6 py-3 rounded-md text-sm font-semibold transition-colors h-12 cursor-pointer"
-              >
-                Book Your Free Call
-              </button>
-            </div>
-          </motion.div>
-        )}
+            </Button>
+          </div>
+        </div>
       </section>
-
-      {/* Booking Modal (Active State) */}
-      <AnimatePresence>
-        {isBookingExpanded && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              key="booking-backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsBookingExpanded(false)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-md z-[9998] cursor-pointer"
-            />
-
-            {/* Expanded Modal Container */}
-            <div
-              className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-              onClick={() => setIsBookingExpanded(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-2xl rounded-3xl w-full max-w-4xl mx-4 overflow-hidden flex flex-col max-h-[90vh] relative p-8 text-zinc-900 pointer-events-auto"
-              >
-                {/* Close Button */}
-                <button
-                  onClick={() => setIsBookingExpanded(false)}
-                  className="absolute top-6 right-6 p-2 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100/50 rounded-full transition-colors cursor-pointer z-10"
-                  aria-label="Close"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                {/* Header Section */}
-                <div className="space-y-2 pr-12 text-center md:text-left">
-                  <motion.h2
-                    layoutId="booking-title"
-                    transition={{ type: "spring", bounce: 0.15, duration: 0.6 }}
-                    className="font-display text-3xl md:text-4xl font-semibold text-zinc-900 tracking-tight"
-                  >
-                    Book a Free Consultancy Call
-                  </motion.h2>
-                  <motion.p
-                    layoutId="booking-desc"
-                    transition={{ type: "spring", bounce: 0.15, duration: 0.6 }}
-                    className="text-zinc-600 text-base leading-relaxed"
-                  >
-                    Schedule a high-touch, complimentary session to understand our ecosystem, map out your custom automation workflows, and see exactly how our playbooks can accelerate your mastery.
-                  </motion.p>
-                </div>
-
-                {/* Lead Capture Form */}
-                <div className="bg-white rounded-xl flex-grow mt-6 border border-zinc-200 p-6 overflow-y-auto relative min-h-[460px]">
-                  <AnimatePresence mode="wait">
-                    {!isSubmitSuccess ? (
-                      <motion.div
-                        key="form"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <h3 className="font-display text-2xl font-semibold text-zinc-900 mb-6">Let's Architect Your Blueprint</h3>
-                        <form className="space-y-4" onSubmit={handleBookingSubmit}>
-                          <div className="space-y-1">
-                            <label htmlFor="fullName" className="text-sm font-semibold text-zinc-700">Full Name</label>
-                            <input type="text" id="fullName" name="fullName" required className="w-full border border-zinc-300 rounded-md px-4 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
-                          </div>
-
-                          <div className="space-y-1">
-                            <label htmlFor="email" className="text-sm font-semibold text-zinc-700">Email Address</label>
-                            <input type="email" id="email" name="email" required className="w-full border border-zinc-300 rounded-md px-4 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
-                          </div>
-
-                          <div className="space-y-1">
-                            <label htmlFor="phone" className="text-sm font-semibold text-zinc-700">Phone Number</label>
-                            <input type="tel" id="phone" name="phone" required placeholder="+91 00000 00000" className="w-full border border-zinc-300 rounded-md px-4 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all placeholder:text-zinc-400" />
-                          </div>
-
-                          <div className="space-y-1">
-                            <label htmlFor="goals" className="text-sm font-semibold text-zinc-700">What specific workflows or AI goals do you want to discuss?</label>
-                            <textarea id="goals" name="goals" rows={4} required className="w-full border border-zinc-300 rounded-md px-4 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all resize-y"></textarea>
-                          </div>
-
-                          <div className="pt-4">
-                            <button 
-                              type="submit" 
-                              disabled={isSubmitting}
-                              className="w-full bg-zinc-900 text-white hover:bg-zinc-800 px-6 py-3 rounded-md text-sm font-semibold transition-colors shadow-sm cursor-pointer disabled:opacity-70 flex justify-center items-center h-12"
-                            >
-                              {isSubmitting ? (
-                                <motion.div
-                                  animate={{ rotate: 360 }}
-                                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                  className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                                />
-                              ) : (
-                                'Request Session'
-                              )}
-                            </button>
-                          </div>
-                        </form>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="success"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.3 }}
-                        className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
-                      >
-                        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
-                          <Check className="w-8 h-8 text-emerald-600" />
-                        </div>
-                        <h3 className="font-display text-2xl font-semibold text-zinc-900 mb-2">Request Received</h3>
-                        <p className="text-zinc-600 text-base leading-relaxed max-w-sm mx-auto">
-                          Thank you for reaching out! We've received your information and will be in touch shortly to schedule your free consultancy call.
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </motion.div>
-            </div>
-          </>
-        )}
-      </AnimatePresence>
-
     </div>
   );
-};
-
+}

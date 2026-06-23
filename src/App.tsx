@@ -8,19 +8,31 @@ import { Dashboard } from './components/Dashboard';
 import { Reader } from './components/Reader';
 import { Checkout } from './components/Checkout';
 import { Consulting } from './components/Consulting';
+import { SubmitSolution } from './components/SubmitSolution';
 import { Updates } from './components/Updates';
 
 import { PLAYBOOKS } from './data';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ShieldAlert } from 'lucide-react';
+import { AuthModal } from './components/AuthModal';
 
 
 function AppContent() {
-  const { currentPath, routeParams, currentUser, purchasedSlugs, isLoading, navigate, login, saveIntent, setAuthModalOpen } = useAppState();
+  const { currentPath, routeParams, currentUser, purchasedSlugs, isLoading, isDarkMode, isAuthModalOpen, navigate, login, saveIntent, setAuthModalOpen } = useAppState();
 
   // Global scroll-to-top on route change
-  React.useEffect(() => {
+  useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentPath]);
+
+  // Dark Mode side effect
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   // ENFORCE APPENDIX A MODULE ROUTE SECURITY GUARDS:
   // Pre-route renderer validation intercepts
@@ -30,6 +42,7 @@ function AppContent() {
         return <Homepage />;
 
       case '/playbooks':
+      case '/playbooks/all':
         return <Catalog />;
 
       case '/playbooks/[slug]':
@@ -89,6 +102,9 @@ function AppContent() {
       case '/solutions':
         return <Consulting />;
 
+      case '/solutions/submit':
+        return <SubmitSolution />;
+
       case '/updates':
         return <Updates />;
 
@@ -109,6 +125,7 @@ function AppContent() {
   return (
     <Frame>
       {renderViewWithGuards()}
+      {isAuthModalOpen && <AuthModal isOpen={isAuthModalOpen} onClose={() => setAuthModalOpen(false)} />}
     </Frame>
   );
 }

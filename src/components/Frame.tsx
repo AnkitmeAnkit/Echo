@@ -1,312 +1,169 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useAppState } from '../store';
-import { AuthModal } from './AuthModal';
-import { EcoBot } from './EcoBot';
-import EchoRobotLogo from './EchoRobotLogo';
-import { Menu, X, LayoutDashboard, LogOut, WifiOff, Bell, BellOff } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { supabase } from '../supabaseClient';
+import { Moon, Sun, Lock, LayoutDashboard, Linkedin, Twitter, Youtube, Github } from 'lucide-react';
+import { Button } from './Button';
 
-interface FrameProps {
-  children: React.ReactNode;
-}
+export function Frame({ children }: { children: React.ReactNode }) {
+  const { isDarkMode, toggleDarkMode, currentUser, setAuthModalOpen, navigate, currentPath } = useAppState();
 
-export const Frame: React.FC<FrameProps> = ({ children }) => {
-  const { currentPath, navigate, currentUser, logout, offlineMode, setOfflineMode, notificationsEnabled, toggleNotifications, isAuthModalOpen, setAuthModalOpen } = useAppState();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [supabaseUser, setSupabaseUser] = useState<boolean>(false);
-
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSupabaseUser(!!session?.user);
-    });
-
-    // Subscribe to auth state changes in real-time
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSupabaseUser(!!session?.user);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleSupabaseSignOut = async () => {
-    await supabase.auth.signOut();
-    logout(); // clear local store state
-    navigate('/');
-  };
-
-  const handleNavLink = (path: string) => {
-    navigate(path);
-    setMobileMenuOpen(false);
-  };
-
-  const handleAuthTrigger = () => {
-    setAuthModalOpen(true);
-    setMobileMenuOpen(false);
-  };
+  const navLinks = [
+    { label: 'Home', path: '/' },
+    { label: 'Playbooks', path: '/playbooks' },
+    { label: 'Solutions', path: '/solutions' },
+    { label: 'Updates', path: '/updates' },
+  ];
 
   return (
-    <div id="echo-glitch-frame" className="min-h-screen bg-canvas text-ink font-sans flex flex-col justify-between selection:bg-surface-strong selection:text-ink">
-      
-      {offlineMode && (
-        <div className="bg-surface-soft border-b border-hairline px-4 py-2 flex items-center justify-between text-sm font-medium text-muted">
-          <div className="flex items-center space-x-2">
-            <WifiOff className="w-4 h-4 text-warning" />
-            <span>You are currently offline. Changes are saved locally.</span>
-          </div>
-          <button 
-            onClick={() => setOfflineMode(false)}
-            className="text-ink hover:underline text-sm font-medium"
-          >
-            Reconnect
-          </button>
-        </div>
-      )}
-
-      {/* Global Header */}
-      <motion.header 
-        initial={{ y: '-100%' }} 
-        animate={{ y: 0 }} 
-        transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="sticky top-0 z-50 bg-canvas h-16 flex items-center border-b border-hairline-soft"
-      >
-        <div className="w-full px-6 md:px-10 flex justify-between items-center">
-          
+    <div className="w-full min-h-screen flex flex-col bg-canvas font-sans text-text-primary overflow-x-hidden">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-canvas-white/80 backdrop-blur-md border-b border-border-light w-full">
+        <div className="w-full px-8 lg:px-16 h-20 flex items-center justify-between">
+          {/* Logo */}
           <div 
-            onClick={() => navigate('/')} 
-            className="flex items-center space-x-2 cursor-pointer group"
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => navigate('/')}
           >
-            <EchoRobotLogo size={44} />
-            <span className="font-display text-xl font-semibold tracking-tight text-ink">
-              Glitch
-            </span>
+            <div className="w-10 h-10 rounded-xl bg-footer-bg text-white flex items-center justify-center font-bold text-xl">
+              <span className="text-brand-primary">e</span>g
+            </div>
+            <span className="font-display font-bold text-xl tracking-tight">echo glitch</span>
           </div>
 
-          {/* Desktop Links */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <button 
-              onClick={() => handleNavLink('/')}
-              className={`text-sm font-medium transition-colors cursor-pointer ${currentPath === '/' ? 'text-ink' : 'text-muted hover:text-ink'}`}
-            >
-              Home
-            </button>
-            <button 
-              onClick={() => handleNavLink('/playbooks')}
-              className={`text-sm font-medium transition-colors cursor-pointer ${currentPath.startsWith('/playbooks') ? 'text-ink' : 'text-muted hover:text-ink'}`}
-            >
-              Playbooks
-            </button>
-            <button 
-              onClick={() => handleNavLink('/solutions')}
-              className={`text-sm font-medium transition-colors cursor-pointer ${currentPath === '/solutions' ? 'text-ink' : 'text-muted hover:text-ink'}`}
-            >
-              Solutions
-            </button>
-            <button 
-              onClick={() => handleNavLink('/updates')}
-              className={`text-sm font-medium transition-colors cursor-pointer ${currentPath === '/updates' ? 'text-ink' : 'text-muted hover:text-ink'}`}
-            >
-              Updates
-            </button>
-
+          {/* Navigation */}
+          <nav className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => {
+              const isActive = currentPath === link.path || (link.path !== '/' && currentPath.startsWith(link.path));
+              return (
+                <button
+                  key={link.path}
+                  onClick={() => navigate(link.path)}
+                  className={`relative py-2 text-sm font-semibold transition-colors ${
+                    isActive ? 'text-brand-primary' : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  {link.label}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-primary rounded-t-full" />
+                  )}
+                </button>
+              );
+            })}
           </nav>
 
-          {/* User Auth Action triggers */}
-          <div className="hidden md:flex items-center space-x-4">
-            <div className="flex space-x-2 items-center mr-4">
-
-              <button
-                onClick={toggleNotifications}
-                className={`p-2 transition-colors rounded-full ${notificationsEnabled ? 'text-ink bg-surface-soft' : 'text-muted hover:text-ink hover:bg-surface-soft'}`}
-                title="Notifications"
-              >
-                {notificationsEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+          {/* Actions */}
+          <div className="flex items-center gap-4">
+              <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-canvas transition-colors text-text-secondary">
+                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
-            </div>
 
-            {supabaseUser ? (
-              <div className="flex items-center space-x-4">
-                <button
+            {currentUser ? (
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  icon={<LayoutDashboard className="w-4 h-4" />}
                   onClick={() => navigate('/dashboard')}
-                  className="text-sm font-medium text-ink hover:text-muted transition-colors cursor-pointer"
                 >
                   Dashboard
-                </button>
-                <button
-                  onClick={handleSupabaseSignOut}
-                  className="inline-flex items-center gap-2 border border-hairline bg-canvas hover:bg-surface-soft text-ink text-sm font-semibold px-4 py-2 rounded-md transition-colors cursor-pointer"
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => {
+                    // Assuming a logout function exists in store, but for now just basic UI
+                    // In a real app we would call logout()
+                    navigate('/');
+                  }}
                 >
-                  <LogOut className="w-4 h-4" />
                   Sign Out
-                </button>
+                </Button>
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={handleAuthTrigger}
-                  id="login-trigger-btn"
-                  className="bg-primary text-on-primary hover:bg-primary-active px-5 py-2.5 rounded-md text-sm font-semibold transition-colors cursor-pointer h-10 flex items-center justify-center"
-                >
-                  Member Access
-                </button>
-              </div>
+              <Button 
+                variant="primary" 
+                size="sm" 
+                icon={<Lock className="w-4 h-4" />}
+                onClick={() => setAuthModalOpen(true)}
+              >
+                Member Access
+              </Button>
             )}
           </div>
-
-          {/* Mobile Toggle */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-ink hover:text-muted focus:outline-none cursor-pointer p-2"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
         </div>
+      </header>
 
-        {/* Mobile Navigation Panel */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden absolute top-16 left-0 right-0 bg-canvas border-b border-hairline shadow-sm overflow-hidden z-40"
-            >
-              <div className="px-6 py-6 space-y-4 flex flex-col font-medium text-sm text-ink">
-                <button 
-                  onClick={() => handleNavLink('/')}
-                  className="text-left py-2 hover:text-muted"
-                >
-                  Home
-                </button>
-                <button 
-                  onClick={() => handleNavLink('/playbooks')}
-                  className="text-left py-2 hover:text-muted"
-                >
-                  Playbooks
-                </button>
-                <button 
-                  onClick={() => handleNavLink('/solutions')}
-                  className="text-left py-2 hover:text-muted"
-                >
-                  Solutions
-                </button>
-                <button 
-                  onClick={() => handleNavLink('/updates')}
-                  className="text-left py-2 hover:text-muted"
-                >
-                  Updates
-                </button>
-
-
-                <div className="border-t border-hairline my-2 pt-4 flex flex-col space-y-4">
-                  {supabaseUser ? (
-                    <>
-                      <button
-                        onClick={() => handleNavLink('/dashboard')}
-                        className="text-left py-2 flex items-center space-x-2"
-                      >
-                        <LayoutDashboard className="w-4 h-4" />
-                        <span>Dashboard</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleSupabaseSignOut();
-                          setMobileMenuOpen(false);
-                        }}
-                        className="text-left py-2 flex items-center space-x-2 text-muted"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span>Sign Out</span>
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        onClick={handleAuthTrigger}
-                        className="bg-primary text-on-primary py-3 rounded-md text-center font-semibold"
-                      >
-                        Member Access
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.header>
-
-      {/* Main View Area */}
-      <main className="flex-1 w-full bg-canvas">
+      {/* Main Content */}
+      <main className="flex-1">
         {children}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-surface-dark py-16 text-sm text-on-dark-soft relative z-10">
-        <div className="w-full px-6 md:px-10 h-full flex flex-col md:flex-row justify-between space-y-12 md:space-y-0">
-          
-          <div className="space-y-4 max-w-xs w-full">
-            <div className="flex items-center space-x-2">
-              <span className="font-display text-xl font-semibold tracking-tight text-on-dark">Echo Glitch</span>
+      <footer className="bg-footer-bg text-white pt-16 pb-10 w-full">
+        <div className="w-full px-8 lg:px-16">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-12 mb-14">
+            {/* Brand Column */}
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-2 mb-5">
+                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center font-bold text-lg">
+                  <span className="text-brand-primary">e</span>g
+                </div>
+                <span className="font-display font-bold text-xl tracking-tight text-white">echo glitch</span>
+              </div>
+              <p className="text-white/50 mb-8 max-w-sm leading-relaxed text-sm">
+                The premium AI ecosystem for ambitious professionals and teams. Built for execution, designed for mastery.
+              </p>
+              <div className="flex items-center gap-3">
+                {[Linkedin, Twitter, Youtube, Github].map((Icon, i) => (
+                  <a key={i} href="#" className="w-10 h-10 rounded-full bg-white/8 border border-white/10 flex items-center justify-center text-white/40 hover:bg-white/15 hover:text-white transition-all duration-200">
+                    <Icon className="w-4 h-4" />
+                  </a>
+                ))}
+              </div>
             </div>
-            <p className="leading-relaxed">
-              The premium AI ecosystem for ambitious professionals. Built for execution, designed for mastery.
-            </p>
+
+            {/* Links Columns */}
+            <div>
+              <h4 className="font-semibold mb-5 text-xs uppercase tracking-widest text-white/40">Product</h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Home</a></li>
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Playbooks</a></li>
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Solutions</a></li>
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Updates</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-5 text-xs uppercase tracking-widest text-white/40">Playbooks</h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Task-Specific</a></li>
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Industry-Specific</a></li>
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Free Resources</a></li>
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">All Playbooks</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-5 text-xs uppercase tracking-widest text-white/40">Solutions</h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Browse Problems</a></li>
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Submit Problem</a></li>
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">How It Works</a></li>
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Pricing</a></li>
+              </ul>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 w-full md:w-auto">
-            <div className="space-y-4">
-              <span className="block text-on-dark font-medium">Product</span>
-              <ul className="space-y-3">
-                <li><button onClick={() => navigate('/')} className="hover:text-on-dark transition-colors cursor-pointer">Home</button></li>
-                <li><button onClick={() => navigate('/playbooks')} className="hover:text-on-dark transition-colors cursor-pointer">Playbooks</button></li>
-                <li><button onClick={() => navigate('/solutions')} className="hover:text-on-dark transition-colors cursor-pointer">Solutions</button></li>
-              </ul>
+          {/* Bottom Bar */}
+          <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/40">
+            <p>© 2026 Echo Glitch. All rights reserved.</p>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-success animate-pulse"></span>
+              <span>All systems operational</span>
             </div>
-            <div className="space-y-4">
-              <span className="block text-on-dark font-medium">Solutions</span>
-              <ul className="space-y-3">
-                <li><button className="hover:text-on-dark transition-colors cursor-pointer">Enterprise</button></li>
-                <li><button className="hover:text-on-dark transition-colors cursor-pointer">Startups</button></li>
-                <li><button className="hover:text-on-dark transition-colors cursor-pointer">Teams</button></li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <span className="block text-on-dark font-medium">Resources</span>
-              <ul className="space-y-3">
-                <li><button onClick={() => navigate('/playbooks')} className="hover:text-on-dark transition-colors cursor-pointer">Documentation</button></li>
-                <li><button onClick={() => navigate('/updates')} className="hover:text-on-dark transition-colors cursor-pointer">Updates</button></li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <span className="block text-on-dark font-medium">Company</span>
-              <ul className="space-y-3">
-                <li><button className="hover:text-on-dark transition-colors cursor-pointer">About</button></li>
-                <li><button className="hover:text-on-dark transition-colors cursor-pointer">Careers</button></li>
-                <li><button className="hover:text-on-dark transition-colors cursor-pointer">Security</button></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <div className="w-full px-6 md:px-10 mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between text-[13px] space-y-4 md:space-y-0">
-          <div className="flex space-x-6">
-            <span>© 2026 Echo Inc.</span>
-            <button className="hover:text-on-dark">Privacy</button>
-            <button className="hover:text-on-dark">Terms</button>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-success"></span>
-            <span>All systems operational</span>
           </div>
         </div>
       </footer>
-
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setAuthModalOpen(false)} />
-      <EcoBot />
     </div>
   );
-};
+}
+
+
