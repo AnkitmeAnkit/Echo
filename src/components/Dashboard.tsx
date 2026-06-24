@@ -9,7 +9,8 @@ import {
 } from 'lucide-react';
 
 export function Dashboard() {
-  const { currentUser, navigate, setAuthModalOpen } = useAppState();
+  const { currentUser, navigate, setAuthModalOpen, purchasedSlugs } = useAppState();
+  const { PLAYBOOKS } = require('../data');
 
   const sidebarLinks = [
     { icon: <Home className="w-5 h-5" />, label: "Dashboard", active: true },
@@ -93,7 +94,7 @@ export function Dashboard() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-display font-bold">My Library</h2>
-                <Badge variant="lavender">0 playbooks</Badge>
+                <Badge variant="lavender">{purchasedSlugs.length} playbooks</Badge>
               </div>
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -110,21 +111,47 @@ export function Dashboard() {
               </div>
             </div>
 
-            {/* Empty State Card */}
-            <Card className="flex items-center justify-center min-h-[400px] border-dashed border-2 border-border-light bg-canvas-white/50">
-              <div className="text-center max-w-sm px-6">
-                <div className="w-20 h-20 bg-brand-lavender rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                  <BookOpen className="w-10 h-10 text-brand-primary" />
+            {purchasedSlugs.length === 0 ? (
+              <Card className="flex items-center justify-center min-h-[400px] border-dashed border-2 border-border-light bg-canvas-white/50">
+                <div className="text-center max-w-sm px-6">
+                  <div className="w-20 h-20 bg-brand-lavender rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                    <BookOpen className="w-10 h-10 text-brand-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">No playbooks yet</h3>
+                  <p className="text-text-secondary text-sm mb-8">
+                    Acquire a playbook from the catalogue and it will appear here instantly.
+                  </p>
+                  <Button icon={<BookOpen className="w-4 h-4" />} onClick={() => navigate('/playbooks')}>
+                    Browse Playbooks
+                  </Button>
                 </div>
-                <h3 className="text-xl font-bold mb-3">No playbooks yet</h3>
-                <p className="text-text-secondary text-sm mb-8">
-                  Acquire a playbook from the catalogue and it will appear here instantly.
-                </p>
-                <Button icon={<BookOpen className="w-4 h-4" />} onClick={() => navigate('/playbooks')}>
-                  Browse Playbooks
-                </Button>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {PLAYBOOKS.filter((p: any) => purchasedSlugs.includes(p.slug)).map((playbook: any, i: number) => (
+                  <Card key={i} className="flex flex-col relative overflow-hidden group border border-border-light shadow-sm">
+                    <div className="aspect-[4/3] w-full bg-canvas relative mb-4">
+                      <img 
+                        src={playbook.coverImage} 
+                        alt={playbook.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-col flex-1">
+                      <h4 className="text-xl font-bold mb-2">{playbook.title}</h4>
+                      <p className="text-text-secondary text-sm mb-6 flex-1 line-clamp-2">{playbook.summary}</p>
+                      
+                      <button
+                        onClick={() => window.open('https://drive.google.com/file/d/dummy-link/view', '_blank')}
+                        className="w-full bg-brand-primary text-white hover:bg-brand-primary/90 py-2.5 rounded-md font-semibold text-sm transition-colors mt-auto cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        Download Playbook
+                      </button>
+                    </div>
+                  </Card>
+                ))}
               </div>
-            </Card>
+            )}
           </div>
           
         </div>

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useAppState } from '../store';
 import { Button } from './Button';
 import { Card } from './Card';
@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 export function Catalog() {
-  const { navigate, setAuthModalOpen, routeParams } = useAppState();
+  const { navigate, setAuthModalOpen, routeParams, currentUser } = useAppState();
   const [activeFilter, setActiveFilter] = React.useState<string>(routeParams.category || 'all');
 
   React.useEffect(() => {
@@ -53,8 +53,8 @@ export function Catalog() {
               Well-researched guides, step-by-step instructions, and free learning resources to help you enable AI in your work the right way.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button icon={<Lock className="w-4 h-4" />} onClick={() => setAuthModalOpen(true)}>
-                Sign In to Access
+              <Button icon={currentUser ? <ArrowRight className="w-4 h-4" /> : <Lock className="w-4 h-4" />} onClick={() => currentUser ? navigate('/dashboard') : setAuthModalOpen(true)}>
+                {currentUser ? 'Go to Dashboard' : 'Sign In to Access'}
               </Button>
               <Button variant="outline" icon={<Search className="w-4 h-4" />}>
                 Research with AI
@@ -179,14 +179,16 @@ export function Catalog() {
         <Card variant="elevated" padding="md" className="flex flex-col sm:flex-row items-center justify-between gap-6 bg-canvas-white animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
           <div className="flex items-center gap-4">
              <div className="w-12 h-12 rounded-full bg-brand-lavender text-brand-primary flex items-center justify-center flex-shrink-0">
-               <Lock className="w-5 h-5" />
+               {currentUser ? <ArrowRight className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
              </div>
              <p className="text-text-secondary font-medium">
-               Sign in to unlock all playbooks, save your favorites, and track your progress.
+               {currentUser 
+                 ? 'Access your saved playbooks and track your progress from your dashboard.' 
+                 : 'Sign in to unlock all playbooks, save your favorites, and track your progress.'}
              </p>
           </div>
-          <Button icon={<Lock className="w-4 h-4" />} className="flex-shrink-0" onClick={() => setAuthModalOpen(true)}>
-            Sign In to Access
+          <Button icon={currentUser ? <ArrowRight className="w-4 h-4" /> : <Lock className="w-4 h-4" />} className="flex-shrink-0" onClick={() => currentUser ? navigate('/dashboard') : setAuthModalOpen(true)}>
+            {currentUser ? 'Go to Dashboard' : 'Sign In to Access'}
           </Button>
         </Card>
       </div>
