@@ -5,7 +5,7 @@ export interface Chapter {
   estimatedMinutes: number;
 }
 
-export type PlaybookTrack = 'engineering' | 'design' | 'strategy' | 'gct' | 'Professional' | 'Custom' | 'Consulting';
+export type PlaybookTrack = 'engineering' | 'design' | 'strategy' | 'Technical' | 'Professional' | 'Custom' | 'Consulting';
 
 export interface Playbook {
   slug: string;

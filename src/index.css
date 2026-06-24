@@ -82,6 +82,7 @@ html {
   max-width: 100%;
   overflow-x: hidden;
   background-color: #F9FAFB;
+  font-size: 110%;
 }
 
 body {
@@ -128,12 +129,23 @@ h6,
   background: linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%);
 }
 
-/* Hide scrollbar — page still scrolls, zero layout gap */
+/* Minimal Custom Scrollbar */
 html {
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: thin; 
+  scrollbar-color: var(--color-border-light) transparent;
 }
 html::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge */
+  width: 6px;
+}
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+html::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-light);
+  border-radius: 10px;
+}
+html::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-tertiary);
 }
 
 @keyframes fadeInUp {

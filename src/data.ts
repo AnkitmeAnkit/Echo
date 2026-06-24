@@ -171,7 +171,7 @@ For registered members, checkout must never require redirection to external gate
     slug: 'sovereign-ai-orchestration',
     title: 'Sovereign AI Infrastructure',
     subtitle: 'Enterprise-Grade Model Hosting, Privacy Firewalls & Private Data Pools',
-    track: 'gct',
+    track: 'Technical',
     price: 250,
     featured: false,
     coverImage: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=600',
