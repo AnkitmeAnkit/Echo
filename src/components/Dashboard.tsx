@@ -7,10 +7,10 @@ import {
   Home, BookOpen, Zap, Heart, Bell, Search, Filter, 
   Wand2, ArrowRight
 } from 'lucide-react';
+import { PLAYBOOKS } from '../data';
 
 export function Dashboard() {
   const { currentUser, navigate, setAuthModalOpen, purchasedSlugs } = useAppState();
-  const { PLAYBOOKS } = require('../data');
 
   const sidebarLinks = [
     { icon: <Home className="w-5 h-5" />, label: "Dashboard", active: true },
