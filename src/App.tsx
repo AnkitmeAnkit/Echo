@@ -9,6 +9,7 @@ import { Reader } from './components/Reader';
 import { Checkout } from './components/Checkout';
 import { Consulting } from './components/Consulting';
 import { SubmitSolution } from './components/SubmitSolution';
+import { AllProblems } from './components/AllProblems';
 import { Updates } from './components/Updates';
 
 import { PLAYBOOKS } from './data';
@@ -104,6 +105,9 @@ function AppContent() {
 
       case '/solutions/submit':
         return <SubmitSolution />;
+
+      case '/solutions/all':
+        return <AllProblems />;
 
       case '/updates':
         return <Updates />;
