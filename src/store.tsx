@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, ConsultingBooking, Playbook } from './types';
 import { PLAYBOOKS } from './data';
+import { supabase } from './supabaseClient';
 
 interface AppContextType {
   currentUser: User | null;
@@ -31,6 +32,7 @@ interface AppContextType {
   saveIntent: (slug: string, price: number) => void;
   getAndClearIntent: () => { slug: string; price: number } | null;
   setAuthModalOpen: (isOpen: boolean) => void;
+  redirectAfterAuth: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -50,77 +52,90 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [isAuthModalOpen, setAuthModalOpen] = useState<boolean>(false);
 
-  // Helper: Route Parser
-  const parseHash = (hash: string) => {
-    const rawHash = hash.replace(/^#/, '') || '/';
-    const [pathPart, queryPart] = rawHash.split('?');
-    
-    // Parse query params
-    const queryParams: Record<string, string> = {};
-    if (queryPart) {
-      const searchParams = new URLSearchParams(queryPart);
-      searchParams.forEach((value, key) => {
-        queryParams[key] = value;
-      });
-    }
+  // Helper: Route Parser — reads from window.location.pathname
+  const parsePath = (pathname: string) => {
+    const path = pathname || '/';
 
-    // Match /playbooks/[slug]
-    if (pathPart.startsWith('/playbooks/')) {
-      const slug = pathPart.split('/playbooks/')[1];
+    // Match /playbooks/[slug] — but not /playbooks or /playbooks/all
+    if (path.startsWith('/playbooks/') && path !== '/playbooks/all') {
+      const slug = path.split('/playbooks/')[1].split('?')[0];
+      const queryParams = parseQuery(path);
       setCurrentPath('/playbooks/[slug]');
       setRouteParams({ slug, ...queryParams });
       return;
     }
-    
+
     // Match /reader/[slug]
-    if (pathPart.startsWith('/reader/')) {
-      const slug = pathPart.split('/reader/')[1];
+    if (path.startsWith('/reader/')) {
+      const slug = path.split('/reader/')[1].split('?')[0];
       setCurrentPath('/reader/[slug]');
-      setRouteParams({ slug, ...queryParams });
+      setRouteParams({ slug });
       return;
     }
 
     // Match /checkout/[slug]
-    if (pathPart.startsWith('/checkout/')) {
-      const slug = pathPart.split('/checkout/')[1];
+    if (path.startsWith('/checkout/')) {
+      const slug = path.split('/checkout/')[1].split('?')[0];
       setCurrentPath('/checkout/[slug]');
-      setRouteParams({ slug, ...queryParams });
+      setRouteParams({ slug });
       return;
     }
 
-    // Default route match
-    setCurrentPath(pathPart);
+    // Default route — strip query params
+    const queryParams = parseQuery(path);
+    setCurrentPath(path.split('?')[0]);
     setRouteParams(queryParams);
   };
 
-  // Listen to hash changes
+  const parseQuery = (path: string): Record<string, string> => {
+    const qIndex = path.indexOf('?');
+    if (qIndex === -1) return {};
+    const queryParams: Record<string, string> = {};
+    const searchParams = new URLSearchParams(path.slice(qIndex + 1));
+    searchParams.forEach((value, key) => { queryParams[key] = value; });
+    return queryParams;
+  };
+
+  // Listen to browser navigation (back/forward)
   useEffect(() => {
-    const handleHashChange = () => {
-      parseHash(window.location.hash);
+    const handlePopState = () => {
+      parsePath(window.location.pathname + window.location.search);
     };
 
-    window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handlePopState);
     // Initial parse
-    handleHashChange();
+    parsePath(window.location.pathname + window.location.search);
 
     return () => {
-      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handlePopState);
     };
   }, []);
 
-  // Sync Storage
+  // Sync Storage & Supabase Auth
   useEffect(() => {
-    // 2. Auth State
-    const savedUser = localStorage.getItem('eg_user');
-    if (savedUser) {
-      try {
-        setCurrentUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error('Error parsing saved user', e);
+    // 1. Supabase Auth State Listener — single source of truth for auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        // Build a User object from the Supabase session
+        const supaUser = session.user;
+        const appUser: User = {
+          email: supaUser.email || '',
+          name: supaUser.user_metadata?.full_name || supaUser.email?.split('@')[0] || 'Member',
+          role: supaUser.user_metadata?.role || 'Member',
+          isPremium: false,
+          joinedAt: supaUser.created_at || new Date().toISOString(),
+          savedScrollPositions: {}
+        };
+        localStorage.setItem('eg_user', JSON.stringify(appUser));
+        setCurrentUser(appUser);
+      } else {
+        // Signed out — clear state
+        localStorage.removeItem('eg_user');
+        setCurrentUser(null);
       }
-    }
+    });
 
-    // 3. Purchases
+    // 2. Purchases
     const savedPurchases = localStorage.getItem('eg_purchases');
     if (savedPurchases) {
       try {
@@ -129,11 +144,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         console.error('Error parsing saved purchases', e);
       }
     } else {
-      // Free default purchases can be empty
       localStorage.setItem('eg_purchases', JSON.stringify([]));
     }
 
-    // 4. Consulting Bookings
+    // 3. Consulting Bookings
     const savedBookings = localStorage.getItem('eg_bookings');
     if (savedBookings) {
       try {
@@ -143,18 +157,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    // 5. Notifications state
+    // 4. Notifications state
     const savedNotif = localStorage.getItem('eg_notifications') === '1';
     setNotificationsEnabled(savedNotif);
 
-    // 6. Dark Mode state
+    // 5. Dark Mode state
     const savedTheme = localStorage.getItem('eg_theme');
     setIsDarkMode(savedTheme === 'dark');
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  // Action: Navigate
+  // Action: Navigate — uses History API for clean URLs
   const navigate = (path: string) => {
-    window.location.hash = path;
+    window.history.pushState({}, '', path);
+    parsePath(path);
   };
 
   // Action: Set Loading
@@ -162,7 +181,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsLoadingState(loading);
   };
 
-  // Action: Login
+  // Action: Login (also used post-Supabase-auth to redirect)
   const login = (email: string, name: string, role: string, isPremium: boolean = false) => {
     const newUser: User = {
       email,
@@ -195,8 +214,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     login(email, name, role, false);
   };
 
+  // Action: Navigate to dashboard (used after auth without rebuilding user object)
+  const redirectAfterAuth = () => {
+    if (routeParams.redirect) {
+      navigate(routeParams.redirect);
+      return;
+    }
+    const intent = getAndClearIntent();
+    if (intent) {
+      navigate(`/checkout/${intent.slug}`);
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
   // Action: Logout
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem('eg_user');
     setCurrentUser(null);
     navigate('/');
@@ -283,6 +317,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   return (
     <AppContext.Provider value={{
+      redirectAfterAuth,
       currentUser,
       purchasedSlugs,
       isLoading,

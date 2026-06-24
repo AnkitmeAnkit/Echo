@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppState } from '../store';
 import { Button } from './Button';
 import { Card } from './Card';
 import { Stepper } from './Stepper';
 import { Badge } from './Badge';
+import { ConsultancyModal } from './ConsultancyModal';
 import { 
   Zap, ArrowRight, BookOpen, Target, Briefcase, FileCheck, 
   Wallet, HeadphonesIcon, MessageSquare, IndianRupee, Rocket,
@@ -12,6 +13,7 @@ import {
 
 export function Homepage() {
   const { navigate } = useAppState();
+  const [isConsultancyOpen, setConsultancyOpen] = useState(false);
 
   const processSteps = [
     { icon: <FileCheck className="w-8 h-8" />, title: "Choose a Problem", description: "Pick a listed problem or submit your own for just ₹9." },
@@ -209,12 +211,20 @@ export function Homepage() {
                 <p className="text-white/80">Talk to our team and find the right way forward.</p>
               </div>
             </div>
-            <Button variant="secondary" size="lg" icon={<ArrowRight className="w-5 h-5" />} iconPosition="right">
+            <Button
+              variant="secondary"
+              size="lg"
+              icon={<ArrowRight className="w-5 h-5" />}
+              iconPosition="right"
+              onClick={() => setConsultancyOpen(true)}
+            >
               Book a Free Consultancy Call
             </Button>
           </div>
         </div>
       </section>
+
+      <ConsultancyModal isOpen={isConsultancyOpen} onClose={() => setConsultancyOpen(false)} />
     </div>
   );
 }

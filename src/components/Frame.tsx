@@ -4,7 +4,9 @@ import { Moon, Sun, Lock, LayoutDashboard, Linkedin, Twitter, Youtube, Github } 
 import { Button } from './Button';
 
 export function Frame({ children }: { children: React.ReactNode }) {
-  const { isDarkMode, toggleDarkMode, currentUser, setAuthModalOpen, navigate, currentPath } = useAppState();
+  const { isDarkMode, toggleDarkMode, currentUser, logout, setAuthModalOpen, navigate, currentPath } = useAppState();
+
+  const isDashboard = currentPath === '/dashboard';
 
   const navLinks = [
     { label: 'Home', path: '/' },
@@ -29,7 +31,8 @@ export function Frame({ children }: { children: React.ReactNode }) {
             <span className="font-display font-bold text-xl tracking-tight">echo glitch</span>
           </div>
 
-          {/* Navigation */}
+          {/* Navigation — hidden inside dashboard */}
+          {!isDashboard && (
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => {
               const isActive = currentPath === link.path || (link.path !== '/' && currentPath.startsWith(link.path));
@@ -49,6 +52,7 @@ export function Frame({ children }: { children: React.ReactNode }) {
               );
             })}
           </nav>
+          )}
 
           {/* Actions */}
           <div className="flex items-center gap-4">
@@ -69,11 +73,7 @@ export function Frame({ children }: { children: React.ReactNode }) {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => {
-                    // Assuming a logout function exists in store, but for now just basic UI
-                    // In a real app we would call logout()
-                    navigate('/');
-                  }}
+                  onClick={() => logout()}
                 >
                   Sign Out
                 </Button>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { X } from 'lucide-react';
+import { X, MailCheck, Lock, UserPlus } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { useAppState } from '../store';
 
@@ -10,21 +10,18 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
-// Email format validation helper
 const isValidEmail = (email: string): boolean =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { navigate } = useAppState();
+  const { redirectAfterAuth } = useAppState();
   const [mounted, setMounted] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
 
-  // Form fields
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Validation error messages
   const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -32,60 +29,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  // Ensure this only runs on the client to avoid SSR hydration mismatches
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [signUpSuccess, setSignUpSuccess] = useState(false);
+  const [signUpEmail, setSignUpEmail] = useState('');
 
-  // Reset form when toggling between login / register modes
-  const handleModeToggle = () => {
-    setIsLogin((prev) => !prev);
-    setName('');
-    setEmail('');
-    setPassword('');
-    setNameError('');
-    setEmailError('');
-    setPasswordError('');
-    setAuthError('');
+  useEffect(() => { setMounted(true); }, []);
+
+  const reset = () => {
+    setName(''); setEmail(''); setPassword('');
+    setNameError(''); setEmailError(''); setPasswordError('');
+    setAuthError(''); setSignUpSuccess(false); setSignUpEmail('');
   };
 
-  // Reset form when drawer is closed
-  const handleClose = () => {
-    setName('');
-    setEmail('');
-    setPassword('');
-    setNameError('');
-    setEmailError('');
-    setPasswordError('');
-    setAuthError('');
-    setIsLogin(true);
-    onClose();
-  };
+  const handleModeToggle = () => { reset(); setIsLogin(prev => !prev); };
+
+  const handleClose = () => { reset(); setIsLogin(true); onClose(); };
 
   const validate = (): boolean => {
     let valid = true;
-
     if (!isLogin && name.trim().length < 2) {
       setNameError('Please enter your full name (at least 2 characters).');
       valid = false;
-    } else {
-      setNameError('');
-    }
-
+    } else setNameError('');
     if (!isValidEmail(email)) {
       setEmailError('Please enter a valid email address.');
       valid = false;
-    } else {
-      setEmailError('');
-    }
-
+    } else setEmailError('');
     if (password.length < 8) {
       setPasswordError('Password must be at least 8 characters.');
       valid = false;
-    } else {
-      setPasswordError('');
-    }
-
+    } else setPasswordError('');
     return valid;
   };
 
@@ -93,31 +65,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     setAuthError('');
     if (!validate()) return;
-    
     setIsLoading(true);
-    
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         handleClose();
-        navigate('/dashboard');
+        redirectAfterAuth();
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            data: {
-              full_name: name,
-            }
-          }
+          options: { data: { full_name: name } }
         });
         if (error) throw error;
-        handleClose();
-        navigate('/dashboard');
+        setSignUpEmail(email);
+        setSignUpSuccess(true);
       }
     } catch (error: any) {
       setAuthError(error.message || 'Authentication failed');
@@ -128,178 +91,287 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   if (!mounted) return null;
 
+  const inputClass = (hasError: boolean) =>
+    `w-full px-4 py-3 rounded-xl border text-sm font-sans text-text-primary bg-canvas-white
+     placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-brand-primary/40
+     focus:border-brand-primary transition-all duration-200
+     ${hasError ? 'border-red-400 bg-red-50/30' : 'border-border-light hover:border-brand-primary/40'}`;
+
   const drawerContent = (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] isolate" role="dialog" aria-modal="true" aria-label={isLogin ? 'Sign in' : 'Create account'}>
-          {/* Backdrop Layer */}
+        <div
+          className="fixed inset-0 z-[100] isolate"
+          role="dialog"
+          aria-modal="true"
+          aria-label={isLogin ? 'Sign in' : 'Create account'}
+        >
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="fixed inset-0 z-[101] bg-black/20 backdrop-blur-sm"
+            className="fixed inset-0 z-[101] bg-slate-900/40 backdrop-blur-sm"
             aria-hidden="true"
           />
 
-          {/* Drawer Layer */}
+          {/* Drawer */}
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-[400px] max-w-[100vw] z-[102] bg-white shadow-2xl border-l border-gray-200 flex flex-col p-8 overflow-y-auto"
+            transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+            className="fixed top-0 right-0 h-full w-[420px] max-w-[100vw] z-[102] flex flex-col overflow-y-auto"
+            style={{
+              background: 'var(--color-canvas-white)',
+              borderLeft: '1px solid var(--color-border-light)',
+              boxShadow: '-8px 0 40px rgba(79,70,229,0.08), -2px 0 12px rgba(0,0,0,0.06)',
+            }}
           >
-            {/* Header / Close Button */}
-            <div className="flex justify-end mb-8 shrink-0">
+            {/* Top accent bar */}
+            <div className="h-1 w-full bg-gradient-to-r from-brand-primary to-violet-500 shrink-0" />
+
+            {/* Close button */}
+            <div className="flex justify-end px-6 pt-5 pb-2 shrink-0">
               <button
                 onClick={handleClose}
-                className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500"
-                aria-label="Close authentication panel"
+                className="w-9 h-9 flex items-center justify-center rounded-full text-text-tertiary hover:text-text-primary hover:bg-canvas transition-all duration-200"
+                aria-label="Close"
               >
-                <X size={24} />
+                <X size={18} />
               </button>
             </div>
 
-            {/* Content Container */}
-            <div className="flex flex-col flex-grow">
-              <h2 className="text-3xl font-medium tracking-tight mb-2 text-gray-900">
-                {isLogin ? 'Welcome back' : 'Create your account'}
-              </h2>
-              <p className="text-gray-500 mb-8">
-                {isLogin
-                  ? 'Sign in to access your execution dashboard.'
-                  : 'Join Echo Glitch and architect your AI advantage.'}
-              </p>
+            <div className="flex flex-col flex-grow px-8 pb-10">
 
-              <AnimatePresence>
-                {authError && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="bg-red-50 text-red-600 text-sm p-4 rounded-lg mb-4"
-                  >
-                    {authError}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Form */}
-              <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5 shrink-0">
-
-                {/* Full Name — Sign Up only */}
-                {!isLogin && (
-                  <div>
-                    <label htmlFor="auth-name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Full Name
-                    </label>
-                    <input
-                      id="auth-name"
-                      type="text"
-                      autoComplete="name"
-                      placeholder="Enter your name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      aria-required="true"
-                      aria-invalid={!!nameError}
-                      aria-describedby={nameError ? 'auth-name-error' : undefined}
-                      className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-black bg-white transition-colors ${
-                        nameError ? 'border-red-400' : 'border-gray-300'
-                      }`}
-                    />
-                    {nameError && (
-                      <p id="auth-name-error" role="alert" className="mt-1 text-xs text-red-500">
-                        {nameError}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Email */}
-                <div>
-                  <label htmlFor="auth-email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    id="auth-email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    aria-required="true"
-                    aria-invalid={!!emailError}
-                    aria-describedby={emailError ? 'auth-email-error' : undefined}
-                    className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-black bg-white transition-colors ${
-                      emailError ? 'border-red-400' : 'border-gray-300'
-                    }`}
-                  />
-                  {emailError && (
-                    <p id="auth-email-error" role="alert" className="mt-1 text-xs text-red-500">
-                      {emailError}
-                    </p>
-                  )}
-                </div>
-
-                {/* Password */}
-                <div>
-                  <label htmlFor="auth-password" className="block text-sm font-medium text-gray-700 mb-1">
-                    Password
-                  </label>
-                  <input
-                    id="auth-password"
-                    type="password"
-                    autoComplete={isLogin ? 'current-password' : 'new-password'}
-                    placeholder={isLogin ? 'Enter your password' : 'Create a password (min. 8 characters)'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    aria-required="true"
-                    aria-invalid={!!passwordError}
-                    aria-describedby={passwordError ? 'auth-password-error' : undefined}
-                    className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-black bg-white transition-colors ${
-                      passwordError ? 'border-red-400' : 'border-gray-300'
-                    }`}
-                  />
-                  {passwordError && (
-                    <p id="auth-password-error" role="alert" className="mt-1 text-xs text-red-500">
-                      {passwordError}
-                    </p>
-                  )}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full mt-4 bg-black text-white font-medium py-3 rounded-lg hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-70 flex items-center justify-center min-h-[48px]"
+              {/* ── SIGNUP SUCCESS ── */}
+              {signUpSuccess ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35 }}
+                  className="flex flex-col flex-grow items-center justify-center text-center gap-6"
                 >
-                  {isLoading ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                    />
-                  ) : isLogin ? (
-                    'Sign In'
-                  ) : (
-                    'Create Account'
-                  )}
-                </button>
-              </form>
-
-              {/* Footer toggle */}
-              <div className="mt-auto pt-8 text-center shrink-0">
-                <p className="text-gray-500 text-sm">
-                  {isLogin ? "Don't have an account? " : 'Already have an account? '}
-                  <button
-                    type="button"
-                    onClick={handleModeToggle}
-                    className="text-black font-medium hover:underline focus:outline-none"
+                  {/* Icon */}
+                  <div
+                    className="w-20 h-20 rounded-2xl flex items-center justify-center"
+                    style={{ background: 'var(--color-brand-lavender)' }}
                   >
-                    {isLogin ? 'Sign up' : 'Sign in'}
-                  </button>
-                </p>
-              </div>
+                    <MailCheck className="w-10 h-10 text-brand-primary" />
+                  </div>
+
+                  {/* Copy */}
+                  <div className="space-y-2">
+                    <p
+                      className="text-[10px] font-bold tracking-widest uppercase text-brand-primary"
+                    >
+                      Verification Sent
+                    </p>
+                    <h2 className="text-2xl font-display font-bold text-text-primary">
+                      Check your inbox
+                    </h2>
+                    <p className="text-text-secondary text-sm leading-relaxed">
+                      We've sent a verification link to:
+                    </p>
+                    <p className="font-semibold text-text-primary text-sm break-all px-4 py-2 rounded-lg bg-brand-lavender">
+                      {signUpEmail}
+                    </p>
+                    <p className="text-text-tertiary text-sm leading-relaxed pt-1">
+                      Click the link to verify your account, then sign in below.
+                    </p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="w-full space-y-3 pt-2">
+                    <button
+                      onClick={() => { setSignUpSuccess(false); setIsLogin(true); }}
+                      className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:shadow-lg"
+                      style={{ background: 'linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%)' }}
+                    >
+                      Go to Sign In
+                    </button>
+                    <button
+                      onClick={handleClose}
+                      className="w-full py-3 rounded-xl text-sm font-semibold text-text-secondary border border-border-light hover:bg-canvas hover:text-text-primary transition-all duration-200"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                /* ── AUTH FORM ── */
+                <div className="flex flex-col flex-grow">
+
+                  {/* Header */}
+                  <div className="mb-8">
+                    {/* Mode icon */}
+                    <div
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
+                      style={{ background: 'var(--color-brand-lavender)' }}
+                    >
+                      {isLogin
+                        ? <Lock className="w-6 h-6 text-brand-primary" />
+                        : <UserPlus className="w-6 h-6 text-brand-primary" />
+                      }
+                    </div>
+                    <p className="text-[10px] font-bold tracking-widest uppercase text-brand-primary mb-1">
+                      {isLogin ? 'Member Access' : 'Join Echo Glitch'}
+                    </p>
+                    <h2 className="text-3xl font-display font-bold text-text-primary">
+                      {isLogin ? 'Welcome back' : 'Create account'}
+                    </h2>
+                    <p className="text-text-secondary text-sm mt-2">
+                      {isLogin
+                        ? 'Sign in to access your execution dashboard.'
+                        : 'Build your AI advantage with premium playbooks.'}
+                    </p>
+                  </div>
+
+                  {/* Error banner */}
+                  <AnimatePresence>
+                    {authError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-600 text-sm p-4 rounded-xl mb-5"
+                      >
+                        <span className="shrink-0 mt-0.5">⚠️</span>
+                        <span>{authError}</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Form */}
+                  <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+
+                    {/* Full Name — signup only */}
+                    {!isLogin && (
+                      <div>
+                        <label htmlFor="auth-name" className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                          Full Name
+                        </label>
+                        <input
+                          id="auth-name"
+                          type="text"
+                          autoComplete="name"
+                          placeholder="Enter your full name"
+                          value={name}
+                          onChange={e => setName(e.target.value)}
+                          aria-required="true"
+                          aria-invalid={!!nameError}
+                          className={inputClass(!!nameError)}
+                        />
+                        {nameError && (
+                          <p role="alert" className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                            <span>⚠</span> {nameError}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Email */}
+                    <div>
+                      <label htmlFor="auth-email" className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                        Email Address
+                      </label>
+                      <input
+                        id="auth-email"
+                        type="email"
+                        autoComplete="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        aria-required="true"
+                        aria-invalid={!!emailError}
+                        className={inputClass(!!emailError)}
+                      />
+                      {emailError && (
+                        <p role="alert" className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                          <span>⚠</span> {emailError}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Password */}
+                    <div>
+                      <label htmlFor="auth-password" className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                        Password
+                      </label>
+                      <input
+                        id="auth-password"
+                        type="password"
+                        autoComplete={isLogin ? 'current-password' : 'new-password'}
+                        placeholder={isLogin ? 'Enter your password' : 'Min. 8 characters'}
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        aria-required="true"
+                        aria-invalid={!!passwordError}
+                        className={inputClass(!!passwordError)}
+                      />
+                      {passwordError && (
+                        <p role="alert" className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                          <span>⚠</span> {passwordError}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Submit */}
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full mt-2 py-3.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60 flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-lg hover:shadow-brand-primary/25 active:scale-[0.98]"
+                      style={{ background: 'linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%)' }}
+                    >
+                      {isLoading ? (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                          className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                        />
+                      ) : isLogin ? (
+                        <>
+                          <Lock className="w-4 h-4" />
+                          Sign In
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-4 h-4" />
+                          Create Account
+                        </>
+                      )}
+                    </button>
+                  </form>
+
+                  {/* Divider */}
+                  <div className="flex items-center gap-3 my-6">
+                    <div className="flex-1 h-px bg-border-light" />
+                    <span className="text-xs text-text-tertiary font-medium">or</span>
+                    <div className="flex-1 h-px bg-border-light" />
+                  </div>
+
+                  {/* Toggle mode */}
+                  <div className="text-center">
+                    <p className="text-text-secondary text-sm">
+                      {isLogin ? "Don't have an account?" : 'Already have an account?'}
+                      {' '}
+                      <button
+                        type="button"
+                        onClick={handleModeToggle}
+                        className="text-brand-primary font-semibold hover:underline focus:outline-none transition-colors"
+                      >
+                        {isLogin ? 'Sign up free' : 'Sign in'}
+                      </button>
+                    </p>
+                  </div>
+
+                  {/* Footer trust line */}
+                  <p className="text-center text-[11px] text-text-tertiary mt-auto pt-8">
+                    By continuing you agree to our Terms of Service &amp; Privacy Policy
+                  </p>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 export function Dashboard() {
-  const { currentUser, navigate } = useAppState();
+  const { currentUser, navigate, setAuthModalOpen } = useAppState();
 
   const sidebarLinks = [
     { icon: <Home className="w-5 h-5" />, label: "Dashboard", active: true },
@@ -72,10 +72,10 @@ export function Dashboard() {
             <div className="relative z-10">
               <div className="text-[10px] font-bold tracking-widest text-brand-primary uppercase mb-2">Member Access</div>
               <h1 className="text-3xl md:text-4xl font-display font-bold mb-3">
-                Welcome back, {currentUser?.user_metadata?.full_name || 'Ankit Upadhyay'} 👋
+                Welcome back, {currentUser?.name || 'Member'} 👋
               </h1>
               <p className="text-text-secondary text-sm">
-                {currentUser?.email || 'upadhyay.ankit1979@gmail.com'} • Member since June 2026
+                {currentUser?.email} • Member since {currentUser?.joinedAt ? new Date(currentUser.joinedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'June 2026'}
               </p>
             </div>
             <div className="hidden md:flex relative z-10 w-32 h-32 items-center justify-center">
