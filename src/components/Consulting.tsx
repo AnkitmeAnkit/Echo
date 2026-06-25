@@ -1,24 +1,17 @@
 import React, { useState } from "react";
 import { useAppState } from "../store";
+import { Problem } from "../types";
+import { PREDEFINED_PROBLEMS } from "../data";
 import { Card } from "./Card";
 import { Button } from "./Button";
 import { Badge } from "./Badge";
 import { Stepper, Step } from "./Stepper";
-import { Lightbulb, Play, BookOpen, Edit3, Wallet, HeadphonesIcon, MessageSquare, IndianRupee, Clock, ArrowRight, ShieldCheck, Lock, X, QrCode, CheckCircle2, Loader2, Phone, CreditCard } from "lucide-react";
-
-interface Problem {
-  category: string;
-  title: string;
-  desc: string;
-  time: string;
-  price: number;
-  tagColor: "lavender" | "mint" | "blue";
-}
+import { Lightbulb, Play, BookOpen, Edit3, Wallet, HeadphonesIcon, MessageSquare, IndianRupee, Clock, ArrowRight, ShieldCheck, Lock, X, QrCode, CheckCircle2, Loader2, Phone, CreditCard, Heart } from "lucide-react";
 
 type PaywallStep = "info" | "verifying" | "success";
 
 export function Consulting() {
-  const { navigate, currentUser, setAuthModalOpen, bookConsulting } = useAppState();
+  const { navigate, currentUser, setAuthModalOpen, bookConsulting, wishlist, toggleWishlist } = useAppState();
   const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
   const [paywallStep, setPaywallStep] = useState<PaywallStep>("info");
   const [upiId, setUpiId] = useState("");
@@ -29,12 +22,6 @@ export function Consulting() {
     { icon: <HeadphonesIcon className="w-8 h-8" />, title: "Expert Connect", description: "Our consultant will call you to understand your requirements." },
     { icon: <MessageSquare className="w-8 h-8" />, title: "Discussion & Analysis", description: "We analyze the problem and discuss the best approach." },
     { icon: <IndianRupee className="w-8 h-8" />, title: "Final Pricing", description: "We provide the final execution plan and pricing after discussion." }
-  ];
-
-  const predefinedProblems: Problem[] = [
-    { category: "Business Strategy", title: "Market Entry Strategy", desc: "Need help entering a new market with the right strategy and positioning.", time: "30-45 min call", price: 9, tagColor: "lavender" },
-    { category: "Operations", title: "Process Optimization", desc: "Improve efficiency and reduce costs with streamlined business processes.", time: "30-45 min call", price: 0, tagColor: "mint" },
-    { category: "Technology", title: "Digital Transformation", desc: "Modernize your business with the right digital tools and strategy.", time: "30-45 min call", price: 9, tagColor: "lavender" }
   ];
 
   const handleCardClick = (prob: Problem) => {
@@ -116,7 +103,7 @@ export function Consulting() {
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {predefinedProblems.map((prob, i) => (
+            {PREDEFINED_PROBLEMS.map((prob, i) => (
               <Card key={i} className="flex flex-col hover:border-brand-primary/30 transition-colors group cursor-pointer" onClick={() => handleCardClick(prob)}>
                 <div className="mb-4"><Badge variant={prob.tagColor}>{prob.category}</Badge></div>
                 <h4 className="text-xl font-bold mb-3">{prob.title}</h4>
@@ -126,8 +113,20 @@ export function Consulting() {
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {prob.time}</span>
                     <span className="font-semibold text-brand-primary">{prob.price === 0 ? "Free" : `₹${prob.price} to connect`}</span>
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-canvas flex items-center justify-center text-text-tertiary group-hover:bg-brand-lavender group-hover:text-brand-primary transition-colors">
-                    <ArrowRight className="w-4 h-4" />
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); toggleWishlist(`problem:${prob.title}`); }}
+                      className={`w-8 h-8 rounded-full bg-canvas flex items-center justify-center transition-colors ${
+                        wishlist.includes(`problem:${prob.title}`) 
+                          ? 'text-red-500 hover:bg-red-50' 
+                          : 'text-text-tertiary hover:bg-brand-lavender hover:text-brand-primary'
+                      }`}
+                    >
+                      <Heart className="w-4 h-4" fill={wishlist.includes(`problem:${prob.title}`) ? "currentColor" : "none"} />
+                    </button>
+                    <div className="w-8 h-8 rounded-full bg-canvas flex items-center justify-center text-text-tertiary group-hover:bg-brand-lavender group-hover:text-brand-primary transition-colors">
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
                   </div>
                 </div>
               </Card>

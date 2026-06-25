@@ -7,11 +7,11 @@ import { PLAYBOOKS } from '../data';
 import { 
   Lock, Search, FileText, ListOrdered, Gift, RefreshCw, 
   ClipboardList, Briefcase, BookOpen, GraduationCap, 
-  Target, Gift as GiftIcon, ArrowRight, Clock
+  Target, Gift as GiftIcon, ArrowRight, Clock, Heart
 } from 'lucide-react';
 
 export function Catalog() {
-  const { navigate, setAuthModalOpen, routeParams, currentUser } = useAppState();
+  const { navigate, setAuthModalOpen, routeParams, currentUser, wishlist, toggleWishlist } = useAppState();
   const [activeFilter, setActiveFilter] = React.useState<string>(routeParams.category || 'all');
 
   React.useEffect(() => {
@@ -166,8 +166,20 @@ export function Catalog() {
                     <span className="font-medium px-2 py-1 bg-canvas rounded-md capitalize">{playbook.track}</span>
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {playbook.chapters.reduce((sum: any, ch: any) => sum + ch.estimatedMinutes, 0)} min read</span>
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-canvas flex items-center justify-center text-text-tertiary group-hover:bg-brand-lavender group-hover:text-brand-primary transition-colors">
-                    <ArrowRight className="w-4 h-4" />
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); toggleWishlist(`playbook:${playbook.slug}`); }}
+                      className={`w-8 h-8 rounded-full bg-canvas flex items-center justify-center transition-colors ${
+                        wishlist.includes(`playbook:${playbook.slug}`) 
+                          ? 'text-red-500 hover:bg-red-50' 
+                          : 'text-text-tertiary hover:bg-brand-lavender hover:text-brand-primary'
+                      }`}
+                    >
+                      <Heart className="w-4 h-4" fill={wishlist.includes(`playbook:${playbook.slug}`) ? "currentColor" : "none"} />
+                    </button>
+                    <div className="w-8 h-8 rounded-full bg-canvas flex items-center justify-center text-text-tertiary group-hover:bg-brand-lavender group-hover:text-brand-primary transition-colors">
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
                   </div>
                 </div>
               </Card>

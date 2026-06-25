@@ -1,14 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppState } from '../store';
 import { Card } from './Card';
 import { Button } from './Button';
 import { Badge } from './Badge';
-import { ProblemSubmission } from '../types';
+import { ProblemSubmission, Problem } from '../types';
 import { 
   Home, BookOpen, Zap, Heart, Bell, Search, Filter, 
   Wand2, ArrowRight, Send, Clock, CheckCircle2, AlertCircle
 } from 'lucide-react';
-import { PLAYBOOKS } from '../data';
+import { PLAYBOOKS, PREDEFINED_PROBLEMS } from '../data';
 
 const statusConfig: Record<ProblemSubmission['status'], { label: string; icon: React.ReactNode; color: string }> = {
   pending:   { label: 'Pending',   icon: <Clock className="w-3 h-3" />,        color: 'bg-amber-100 text-amber-700' },
@@ -17,14 +17,15 @@ const statusConfig: Record<ProblemSubmission['status'], { label: string; icon: R
 };
 
 export function Dashboard() {
-  const { currentUser, navigate, setAuthModalOpen, purchasedSlugs, problemSubmissions } = useAppState();
+  const { currentUser, navigate, setAuthModalOpen, purchasedSlugs, problemSubmissions, wishlist, toggleWishlist } = useAppState();
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'library' | 'solutions' | 'wishlist'>('dashboard');
 
   const sidebarLinks = [
-    { icon: <Home className="w-5 h-5" />,     label: 'Dashboard',   active: false },
-    { icon: <BookOpen className="w-5 h-5" />, label: 'My Library',  active: false },
-    { icon: <Zap className="w-5 h-5" />,      label: 'Solutions',   active: true  },
-    { icon: <Heart className="w-5 h-5" />,    label: 'Wishlist',    active: false },
-    { icon: <Bell className="w-5 h-5" />,     label: 'Updates',     active: false },
+    { id: 'dashboard', icon: <Home className="w-5 h-5" />,     label: 'Dashboard',   action: () => setActiveTab('dashboard') },
+    { id: 'library',   icon: <BookOpen className="w-5 h-5" />, label: 'My Library',  action: () => setActiveTab('library') },
+    { id: 'solutions', icon: <Zap className="w-5 h-5" />,      label: 'My Solutions',action: () => setActiveTab('solutions') },
+    { id: 'wishlist',  icon: <Heart className="w-5 h-5" />,    label: 'Wishlist',    action: () => setActiveTab('wishlist') },
+    { id: 'updates',   icon: <Bell className="w-5 h-5" />,     label: 'Updates',     action: () => navigate('/updates') },
   ];
 
   return (
@@ -36,8 +37,9 @@ export function Dashboard() {
             {sidebarLinks.map((link, i) => (
               <button
                 key={i}
+                onClick={link.action}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${
-                  link.active 
+                  activeTab === link.id 
                     ? 'bg-brand-lavender text-brand-primary' 
                     : 'text-text-secondary hover:bg-canvas hover:text-text-primary'
                 }`}
@@ -75,29 +77,32 @@ export function Dashboard() {
       <main className="flex-1 p-6 md:p-10">
         <div className="max-w-5xl mx-auto">
           
-          {/* Welcome Banner */}
-          <div className="bg-gradient-lavender rounded-[2rem] p-10 flex items-center justify-between relative overflow-hidden mb-12 shadow-lavender animate-fade-in-up">
-            <div className="relative z-10">
-              <div className="text-[10px] font-bold tracking-widest text-brand-primary uppercase mb-2">Member Access</div>
-              <h1 className="text-3xl md:text-4xl font-display font-bold mb-3">
-                Welcome back, {currentUser?.name || 'Member'} 👋
-              </h1>
-              <p className="text-text-secondary text-sm">
-                {currentUser?.email} • Member since {currentUser?.joinedAt ? new Date(currentUser.joinedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'June 2026'}
-              </p>
+          {/* Dashboard Tab */}
+          {activeTab === 'dashboard' && (
+            <div className="bg-gradient-lavender rounded-[2rem] p-10 flex items-center justify-between relative overflow-hidden mb-12 shadow-lavender animate-fade-in-up">
+              <div className="relative z-10">
+                <div className="text-[10px] font-bold tracking-widest text-brand-primary uppercase mb-2">Member Access</div>
+                <h1 className="text-3xl md:text-4xl font-display font-bold mb-3">
+                  Welcome back, {currentUser?.name || 'Member'} 👋
+                </h1>
+                <p className="text-text-secondary text-sm">
+                  {currentUser?.email} • Member since {currentUser?.joinedAt ? new Date(currentUser.joinedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'June 2026'}
+                </p>
+              </div>
+              <div className="hidden md:flex relative z-10 w-32 h-32 items-center justify-center">
+                  {/* 3D Books Placeholder */}
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-2xl rotate-6 shadow-xl"></div>
+                    <div className="absolute inset-0 bg-brand-primary/10 rounded-2xl -rotate-3 border border-white"></div>
+                    <BookOpen className="w-16 h-16 text-brand-primary relative z-20" />
+                  </div>
+              </div>
             </div>
-            <div className="hidden md:flex relative z-10 w-32 h-32 items-center justify-center">
-                {/* 3D Books Placeholder */}
-                <div className="relative">
-                  <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-2xl rotate-6 shadow-xl"></div>
-                  <div className="absolute inset-0 bg-brand-primary/10 rounded-2xl -rotate-3 border border-white"></div>
-                  <BookOpen className="w-16 h-16 text-brand-primary relative z-20" />
-                </div>
-            </div>
-          </div>
+          )}
 
           {/* My Library Section */}
-          <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          {activeTab === 'library' && (
+            <div className="animate-fade-in-up">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-display font-bold">My Library</h2>
@@ -160,9 +165,11 @@ export function Dashboard() {
               </div>
             )}
           </div>
+          )}
 
           {/* ── My Solutions Section ────────────────────────────── */}
-          <div className="animate-fade-in-up mt-14" style={{ animationDelay: '0.2s' }}>
+          {activeTab === 'solutions' && (
+            <div className="animate-fade-in-up">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-display font-bold">My Solutions</h2>
@@ -233,6 +240,97 @@ export function Dashboard() {
               </div>
             )}
           </div>
+          )}
+
+          {/* ── Wishlist Section ────────────────────────────── */}
+          {activeTab === 'wishlist' && (
+            <div className="animate-fade-in-up">
+              <div className="flex items-center gap-3 mb-6">
+                <h2 className="text-2xl font-display font-bold">Wishlist</h2>
+                <Badge variant="lavender">{wishlist.length} saved</Badge>
+              </div>
+
+              {wishlist.length === 0 ? (
+                <Card className="flex items-center justify-center min-h-[300px] border-dashed border-2 border-border-light bg-canvas-white/50">
+                  <div className="text-center max-w-sm px-6">
+                    <div className="w-20 h-20 bg-brand-lavender rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                      <Heart className="w-10 h-10 text-brand-primary" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3">Your wishlist is empty</h3>
+                    <p className="text-text-secondary text-sm">
+                      Click the heart icon on playbooks or problems to save them for later.
+                    </p>
+                  </div>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {wishlist.map((item, i) => {
+                    const [type, id] = item.split(':');
+                    
+                    if (type === 'playbook') {
+                      const playbook = PLAYBOOKS.find(p => p.slug === id);
+                      if (!playbook) return null;
+                      return (
+                        <Card key={i} className="flex flex-col hover:border-brand-primary/30 transition-colors group cursor-pointer relative overflow-hidden" onClick={() => navigate(`/playbooks/${playbook.slug}`)}>
+                          <div className="mb-4">
+                            <Badge variant={i % 2 === 0 ? "lavender" : "mint"}>Playbook</Badge>
+                          </div>
+                          <h4 className="text-xl font-bold mb-3">{playbook.title}</h4>
+                          <p className="text-text-secondary text-sm mb-8 flex-1">{playbook.summary}</p>
+                          
+                          <div className="flex items-center justify-between text-xs text-text-secondary pt-4 border-t border-border-light">
+                            <div className="flex items-center gap-4">
+                              <span className="font-medium px-2 py-1 bg-canvas rounded-md capitalize">{playbook.track}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); toggleWishlist(item); }}
+                                className="w-8 h-8 rounded-full bg-canvas flex items-center justify-center transition-colors text-red-500 hover:bg-red-50"
+                              >
+                                <Heart className="w-4 h-4" fill="currentColor" />
+                              </button>
+                              <div className="w-8 h-8 rounded-full bg-canvas flex items-center justify-center text-text-tertiary group-hover:bg-brand-lavender group-hover:text-brand-primary transition-colors">
+                                <ArrowRight className="w-4 h-4" />
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    }
+                    
+                    if (type === 'problem') {
+                      const prob = PREDEFINED_PROBLEMS.find(p => p.title === id);
+                      if (!prob) return null;
+                      return (
+                        <Card key={i} className="flex flex-col hover:border-brand-primary/30 transition-colors group cursor-pointer" onClick={() => navigate('/consulting')}>
+                          <div className="mb-4"><Badge variant={prob.tagColor}>{prob.category}</Badge></div>
+                          <h4 className="text-xl font-bold mb-3">{prob.title}</h4>
+                          <p className="text-text-secondary text-sm mb-8 flex-1">{prob.desc}</p>
+                          <div className="flex items-center justify-between text-xs text-text-secondary pt-4 border-t border-border-light">
+                            <div className="flex items-center gap-4">
+                              <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {prob.time}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); toggleWishlist(item); }}
+                                className="w-8 h-8 rounded-full bg-canvas flex items-center justify-center transition-colors text-red-500 hover:bg-red-50"
+                              >
+                                <Heart className="w-4 h-4" fill="currentColor" />
+                              </button>
+                              <div className="w-8 h-8 rounded-full bg-canvas flex items-center justify-center text-text-tertiary group-hover:bg-brand-lavender group-hover:text-brand-primary transition-colors">
+                                <ArrowRight className="w-4 h-4" />
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
         </div>
       </main>

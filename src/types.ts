@@ -57,3 +57,12 @@ export interface ProblemSubmission {
   status: 'pending' | 'in_review' | 'resolved';
   paymentRef: string;
 }
+
+export interface Problem {
+  category: string;
+  title: string;
+  desc: string;
+  time: string;
+  price: number;
+  tagColor: "lavender" | "mint" | "blue";
+}

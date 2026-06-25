@@ -1,4 +1,4 @@
-import { Playbook } from './types';
+import { Playbook, Problem } from './types';
 
 export const PLAYBOOKS: Playbook[] = [
   {
@@ -206,4 +206,10 @@ Blend queried context documents cleanly within prompt formulations. Always provi
       }
     ]
   }
+];
+
+export const PREDEFINED_PROBLEMS: Problem[] = [
+  { category: "Business Strategy", title: "Market Entry Strategy", desc: "Need help entering a new market with the right strategy and positioning.", time: "30-45 min call", price: 9, tagColor: "lavender" },
+  { category: "Operations", title: "Process Optimization", desc: "Improve efficiency and reduce costs with streamlined business processes.", time: "30-45 min call", price: 0, tagColor: "mint" },
+  { category: "Technology", title: "Digital Transformation", desc: "Modernize your business with the right digital tools and strategy.", time: "30-45 min call", price: 9, tagColor: "lavender" }
 ];

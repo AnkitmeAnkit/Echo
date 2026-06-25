@@ -10,6 +10,7 @@ interface AppContextType {
   routeParams: Record<string, string>;
   bookings: ConsultingBooking[];
   problemSubmissions: ProblemSubmission[];
+  wishlist: string[];
   offlineMode: boolean;
   notificationsEnabled: boolean;
   isDarkMode: boolean;
@@ -27,6 +28,7 @@ interface AppContextType {
   getScrollPosition: (slug: string) => number;
   bookConsulting: (booking: Omit<ConsultingBooking, 'id' | 'submittedAt'>) => void;
   submitProblem: (data: Omit<ProblemSubmission, 'id' | 'submittedAt' | 'status' | 'paymentRef'>) => ProblemSubmission;
+  toggleWishlist: (id: string) => void;
   setOfflineMode: (offline: boolean) => void;
   toggleNotifications: () => void;
   toggleDarkMode: () => void;
@@ -50,6 +52,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isLoading, setIsLoadingState] = useState<boolean>(false);
   const [bookings, setBookings] = useState<ConsultingBooking[]>([]);
   const [problemSubmissions, setProblemSubmissions] = useState<ProblemSubmission[]>([]);
+  const [wishlist, setWishlist] = useState<string[]>([]);
   const [offlineMode, setOfflineMode] = useState<boolean>(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
@@ -168,6 +171,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setProblemSubmissions(JSON.parse(savedSubmissions));
       } catch (e) {
         console.error('Error parsing saved problem submissions', e);
+      }
+    }
+
+    // 3c. Wishlist
+    const savedWishlist = localStorage.getItem('eg_wishlist');
+    if (savedWishlist) {
+      try {
+        setWishlist(JSON.parse(savedWishlist));
+      } catch (e) {
+        console.error('Error parsing saved wishlist', e);
       }
     }
 
@@ -314,6 +327,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newSubmission;
   };
 
+  // Action: Toggle Wishlist
+  const toggleWishlist = (id: string) => {
+    let updated;
+    if (wishlist.includes(id)) {
+      updated = wishlist.filter(item => item !== id);
+    } else {
+      updated = [...wishlist, id];
+    }
+    localStorage.setItem('eg_wishlist', JSON.stringify(updated));
+    setWishlist(updated);
+  };
+
   // Action: Toggle Notifications
   const toggleNotifications = () => {
     const updated = !notificationsEnabled;
@@ -354,7 +379,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       routeParams,
       bookings,
       problemSubmissions,
+      wishlist,
       submitProblem,
+      toggleWishlist,
       offlineMode,
       notificationsEnabled,
       isDarkMode,
