@@ -11,15 +11,14 @@ import { Consulting } from './components/Consulting';
 import { SubmitSolution } from './components/SubmitSolution';
 import { AllProblems } from './components/AllProblems';
 import { Updates } from './components/Updates';
-
-import { PLAYBOOKS } from './data';
+import { AdminDashboard } from './components/AdminDashboard';
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert } from 'lucide-react';
 import { AuthModal } from './components/AuthModal';
 
 
 function AppContent() {
-  const { currentPath, routeParams, currentUser, purchasedSlugs, isLoading, isDarkMode, isAuthModalOpen, navigate, login, saveIntent, setAuthModalOpen } = useAppState();
+  const { currentPath, routeParams, currentUser, purchasedSlugs, playbooks, isLoading, isDarkMode, isAuthModalOpen, navigate, login, saveIntent, setAuthModalOpen } = useAppState();
 
   // Global scroll-to-top on route change
   useEffect(() => {
@@ -89,7 +88,7 @@ function AppContent() {
           React.useEffect(() => {
             const targetSlug = routeParams.slug;
             if (targetSlug) {
-              const targetPlaybook = PLAYBOOKS.find(p => p.slug === targetSlug);
+              const targetPlaybook = playbooks.find(p => p.slug === targetSlug);
               saveIntent(targetSlug, targetPlaybook?.price || 189);
             }
             navigate('/playbooks');
@@ -112,7 +111,8 @@ function AppContent() {
       case '/updates':
         return <Updates />;
 
-
+      case '/admin':
+        return <AdminDashboard />;
 
       default:
         // Universal fallback homepage

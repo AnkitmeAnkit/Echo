@@ -74,12 +74,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         handleClose();
         redirectAfterAuth();
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { full_name: name, phone } }
         });
         if (error) throw error;
+        
+        if (data.user) {
+          await supabase.from('profiles').update({ phone }).eq('id', data.user.id);
+        }
+        
         setSignUpEmail(email);
         setSignUpSuccess(true);
       }

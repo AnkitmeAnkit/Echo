@@ -1,16 +1,23 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, ConsultingBooking, Playbook, ProblemSubmission } from './types';
-import { PLAYBOOKS } from './data';
+import { User, Playbook, BlogUpdate, Consultation } from './types';
 import { supabase } from './supabaseClient';
 
 interface AppContextType {
   currentUser: User | null;
+  isAdmin: boolean;
+  
+  // App Data
+  playbooks: Playbook[];
+  blogUpdates: BlogUpdate[];
+  
+  // User Data
   purchasedSlugs: string[];
+  wishlistItems: Array<{ item_type: string; item_slug: string }>;
+  userConsultations: Consultation[];
+  
+  // State
   currentPath: string;
   routeParams: Record<string, string>;
-  bookings: ConsultingBooking[];
-  problemSubmissions: ProblemSubmission[];
-  wishlist: string[];
   offlineMode: boolean;
   notificationsEnabled: boolean;
   isDarkMode: boolean;
@@ -23,12 +30,19 @@ interface AppContextType {
   register: (email: string, name: string, role: string) => void;
   logout: () => void;
   setProfessionalRole: (role: string) => void;
-  acquirePlaybook: (slug: string) => void;
+  
+  // Data actions
+  acquirePlaybook: (slug: string, isFree: boolean, paymentRef?: string) => Promise<void>;
+  hasPurchased: (slug: string) => boolean;
+  
+  toggleWishlist: (itemType: 'playbook' | 'problem', itemSlug: string) => Promise<void>;
+  isWishlisted: (itemType: string, itemSlug: string) => boolean;
+  
+  submitConsultation: (data: any) => Promise<void>;
+  
   saveScrollPosition: (slug: string, progress: number) => void;
   getScrollPosition: (slug: string) => number;
-  bookConsulting: (booking: Omit<ConsultingBooking, 'id' | 'submittedAt'>) => void;
-  submitProblem: (data: Omit<ProblemSubmission, 'id' | 'submittedAt' | 'status' | 'paymentRef'>) => ProblemSubmission;
-  toggleWishlist: (id: string) => void;
+  
   setOfflineMode: (offline: boolean) => void;
   toggleNotifications: () => void;
   toggleDarkMode: () => void;
@@ -37,6 +51,7 @@ interface AppContextType {
   getAndClearIntent: () => { slug: string; price: number } | null;
   setAuthModalOpen: (isOpen: boolean) => void;
   redirectAfterAuth: () => void;
+  refreshGlobalData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -46,23 +61,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentPath, setCurrentPath] = useState<string>('/');
   const [routeParams, setRouteParams] = useState<Record<string, string>>({});
 
-  // Auth & Storage State
+  // Auth & Admin State
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+
+  // App Data
+  const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
+  const [blogUpdates, setBlogUpdates] = useState<BlogUpdate[]>([]);
+
+  // User Data
   const [purchasedSlugs, setPurchasedSlugs] = useState<string[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<Array<{ item_type: string; item_slug: string }>>([]);
+  const [userConsultations, setUserConsultations] = useState<Consultation[]>([]);
+
   const [isLoading, setIsLoadingState] = useState<boolean>(false);
-  const [bookings, setBookings] = useState<ConsultingBooking[]>([]);
-  const [problemSubmissions, setProblemSubmissions] = useState<ProblemSubmission[]>([]);
-  const [wishlist, setWishlist] = useState<string[]>([]);
   const [offlineMode, setOfflineMode] = useState<boolean>(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [isAuthModalOpen, setAuthModalOpen] = useState<boolean>(false);
 
-  // Helper: Route Parser — reads from window.location.pathname
+  // Helper: Route Parser
   const parsePath = (pathname: string) => {
     const path = pathname || '/';
-
-    // Match /playbooks/[slug] — but not /playbooks or /playbooks/all
     if (path.startsWith('/playbooks/') && path !== '/playbooks/all') {
       const slug = path.split('/playbooks/')[1].split('?')[0];
       const queryParams = parseQuery(path);
@@ -70,24 +90,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setRouteParams({ slug, ...queryParams });
       return;
     }
-
-    // Match /reader/[slug]
     if (path.startsWith('/reader/')) {
       const slug = path.split('/reader/')[1].split('?')[0];
       setCurrentPath('/reader/[slug]');
       setRouteParams({ slug });
       return;
     }
-
-    // Match /checkout/[slug]
     if (path.startsWith('/checkout/')) {
       const slug = path.split('/checkout/')[1].split('?')[0];
       setCurrentPath('/checkout/[slug]');
       setRouteParams({ slug });
       return;
     }
-
-    // Default route — strip query params
     const queryParams = parseQuery(path);
     setCurrentPath(path.split('?')[0]);
     setRouteParams(queryParams);
@@ -102,29 +116,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return queryParams;
   };
 
-  // Listen to browser navigation (back/forward)
   useEffect(() => {
-    const handlePopState = () => {
-      parsePath(window.location.pathname + window.location.search);
-    };
-
+    const handlePopState = () => parsePath(window.location.pathname + window.location.search);
     window.addEventListener('popstate', handlePopState);
-    // Initial parse
     parsePath(window.location.pathname + window.location.search);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
+  const fetchGlobalData = async () => {
+    const [{ data: pData }, { data: bData }] = await Promise.all([
+      supabase.from('playbooks').select('*').eq('is_published', true).order('created_at', { ascending: false }),
+      supabase.from('blog_updates').select('*').eq('is_published', true).order('published_at', { ascending: false })
+    ]);
+    
+    if (pData) {
+      const mappedPlaybooks = pData.map((p: any) => ({
+        ...p,
+        coverImage: p.cover_image,
+        fullDesc: p.full_desc,
+        isPublished: p.is_published,
+        createdAt: p.created_at
+      }));
+      setPlaybooks(mappedPlaybooks);
+    }
+    
+    if (bData) {
+      const mappedBlogs = bData.map((b: any) => ({
+        ...b,
+        fullContent: b.full_content,
+        tagColor: b.tag_color,
+        coverImage: b.cover_image,
+        isPublished: b.is_published,
+        publishedAt: b.published_at
+      }));
+      setBlogUpdates(mappedBlogs);
+    }
+  };
+
+  // App Mount: Fetch global data
+  useEffect(() => {
+    fetchGlobalData();
   }, []);
 
   // Sync Storage & Supabase Auth
   useEffect(() => {
-    // 1. Supabase Auth State Listener — single source of truth for auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        // Build a User object from the Supabase session
         const supaUser = session.user;
         const appUser: User = {
+          id: supaUser.id,
           email: supaUser.email || '',
           name: supaUser.user_metadata?.full_name || supaUser.email?.split('@')[0] || 'Member',
           role: supaUser.user_metadata?.role || 'Member',
@@ -133,62 +173,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           joinedAt: supaUser.created_at || new Date().toISOString(),
           savedScrollPositions: {}
         };
+        
+        try {
+          const storedUser = localStorage.getItem('eg_user');
+          if (storedUser) {
+             const parsed = JSON.parse(storedUser);
+             if (parsed.savedScrollPositions) appUser.savedScrollPositions = parsed.savedScrollPositions;
+          }
+        } catch (e) {}
+
         localStorage.setItem('eg_user', JSON.stringify(appUser));
         setCurrentUser(appUser);
+        
+        // Fetch user data
+        const [profileRes, purchasesRes, wishlistRes, consultationsRes] = await Promise.all([
+          supabase.from('profiles').select('is_admin').eq('id', supaUser.id).single(),
+          supabase.from('purchases').select('playbook_slug').eq('user_id', supaUser.id),
+          supabase.from('wishlist').select('item_type, item_slug').eq('user_id', supaUser.id),
+          supabase.from('consultations').select('*').eq('user_id', supaUser.id).order('submitted_at', { ascending: false })
+        ]);
+
+        if (profileRes.data) setIsAdmin(!!profileRes.data.is_admin);
+        if (purchasesRes.data) setPurchasedSlugs(purchasesRes.data.map((p: any) => p.playbook_slug));
+        if (wishlistRes.data) setWishlistItems(wishlistRes.data);
+        if (consultationsRes.data) setUserConsultations(consultationsRes.data);
+
       } else {
-        // Signed out — clear state
         localStorage.removeItem('eg_user');
         setCurrentUser(null);
+        setIsAdmin(false);
+        setPurchasedSlugs([]);
+        setWishlistItems([]);
+        setUserConsultations([]);
       }
     });
 
-    // 2. Purchases
-    const savedPurchases = localStorage.getItem('eg_purchases');
-    if (savedPurchases) {
-      try {
-        setPurchasedSlugs(JSON.parse(savedPurchases));
-      } catch (e) {
-        console.error('Error parsing saved purchases', e);
-      }
-    } else {
-      localStorage.setItem('eg_purchases', JSON.stringify([]));
-    }
-
-    // 3. Consulting Bookings
-    const savedBookings = localStorage.getItem('eg_bookings');
-    if (savedBookings) {
-      try {
-        setBookings(JSON.parse(savedBookings));
-      } catch (e) {
-        console.error('Error parsing saved bookings', e);
-      }
-    }
-
-    // 3b. Problem Submissions
-    const savedSubmissions = localStorage.getItem('eg_problem_submissions');
-    if (savedSubmissions) {
-      try {
-        setProblemSubmissions(JSON.parse(savedSubmissions));
-      } catch (e) {
-        console.error('Error parsing saved problem submissions', e);
-      }
-    }
-
-    // 3c. Wishlist
-    const savedWishlist = localStorage.getItem('eg_wishlist');
-    if (savedWishlist) {
-      try {
-        setWishlist(JSON.parse(savedWishlist));
-      } catch (e) {
-        console.error('Error parsing saved wishlist', e);
-      }
-    }
-
-    // 4. Notifications state
     const savedNotif = localStorage.getItem('eg_notifications') === '1';
     setNotificationsEnabled(savedNotif);
 
-    // 5. Dark Mode state
     const savedTheme = localStorage.getItem('eg_theme');
     setIsDarkMode(savedTheme === 'dark');
 
@@ -197,73 +219,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, []);
 
-  // Action: Navigate — uses History API for clean URLs
   const navigate = (path: string) => {
     window.history.pushState({}, '', path);
     parsePath(path);
   };
 
-  // Action: Set Loading
-  const setLoading = (loading: boolean) => {
-    setIsLoadingState(loading);
-  };
+  const setLoading = (loading: boolean) => setIsLoadingState(loading);
 
-  // Action: Login (also used post-Supabase-auth to redirect)
   const login = (email: string, name: string, role: string, isPremium: boolean = false) => {
-    const newUser: User = {
-      email,
-      name,
-      role,
-      isPremium,
-      joinedAt: new Date().toISOString(),
-      savedScrollPositions: {}
-    };
-    localStorage.setItem('eg_user', JSON.stringify(newUser));
-    setCurrentUser(newUser);
-
-    // Check for redirect param
+    // Note: actual auth is handled by Supabase in AuthModal. This just handles redirection.
     if (routeParams.redirect) {
       navigate(routeParams.redirect);
       return;
     }
-
-    // After logging in, check for intent
     const intent = getAndClearIntent();
-    if (intent) {
-      navigate(`/checkout/${intent.slug}`);
-    } else {
-      navigate('/dashboard');
-    }
+    if (intent) navigate(`/checkout/${intent.slug}`);
+    else navigate('/dashboard');
   };
 
-  // Action: Register
-  const register = (email: string, name: string, role: string) => {
-    login(email, name, role, false);
-  };
+  const register = (email: string, name: string, role: string) => login(email, name, role, false);
 
-  // Action: Navigate to dashboard (used after auth without rebuilding user object)
   const redirectAfterAuth = () => {
     if (routeParams.redirect) {
       navigate(routeParams.redirect);
       return;
     }
     const intent = getAndClearIntent();
-    if (intent) {
-      navigate(`/checkout/${intent.slug}`);
-    } else {
-      navigate('/dashboard');
-    }
+    if (intent) navigate(`/checkout/${intent.slug}`);
+    else navigate('/dashboard');
   };
 
-  // Action: Logout
   const logout = async () => {
     await supabase.auth.signOut();
     localStorage.removeItem('eg_user');
     setCurrentUser(null);
+    setIsAdmin(false);
+    setPurchasedSlugs([]);
+    setWishlistItems([]);
+    setUserConsultations([]);
     navigate('/');
   };
 
-  // Action: Set role
   const setProfessionalRole = (role: string) => {
     if (currentUser) {
       const updated = { ...currentUser, role };
@@ -272,14 +268,63 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Action: Acquire Playbook
-  const acquirePlaybook = (slug: string) => {
-    const updated = Array.from(new Set([...purchasedSlugs, slug]));
-    localStorage.setItem('eg_purchases', JSON.stringify(updated));
-    setPurchasedSlugs(updated);
+  // Acquire Playbook
+  const acquirePlaybook = async (slug: string, isFree: boolean, paymentRef?: string) => {
+    if (!currentUser) return;
+    const { error } = await supabase.from('purchases').insert({
+      user_id: currentUser.id,
+      playbook_slug: slug,
+      amount_paid: isFree ? 0 : 9,
+      payment_ref: paymentRef || 'free',
+      payment_status: 'completed'
+    });
+    if (!error || error.code === '23505') {
+      if (!purchasedSlugs.includes(slug)) {
+        setPurchasedSlugs(prev => [...prev, slug]);
+      }
+    } else {
+      console.error("Error acquiring playbook:", error);
+    }
   };
 
-  // Action: Save scroll progress
+  const hasPurchased = (slug: string): boolean => {
+    return purchasedSlugs.includes(slug);
+  };
+
+  // Toggle Wishlist
+  const toggleWishlist = async (itemType: 'playbook' | 'problem', itemSlug: string) => {
+    if (!currentUser) return;
+    const isW = isWishlisted(itemType, itemSlug);
+    
+    if (isW) {
+      await supabase.from('wishlist').delete().match({ user_id: currentUser.id, item_type: itemType, item_slug: itemSlug });
+      setWishlistItems(prev => prev.filter(i => !(i.item_type === itemType && i.item_slug === itemSlug)));
+    } else {
+      await supabase.from('wishlist').insert({ user_id: currentUser.id, item_type: itemType, item_slug: itemSlug });
+      setWishlistItems(prev => [...prev, { item_type: itemType, item_slug: itemSlug }]);
+    }
+  };
+
+  const isWishlisted = (itemType: string, itemSlug: string): boolean => {
+    return wishlistItems.some(i => i.item_type === itemType && i.item_slug === itemSlug);
+  };
+
+  // Submit Consultation
+  const submitConsultation = async (data: any) => {
+    if (!currentUser) return;
+    const insertData = {
+      ...data,
+      user_id: currentUser.id
+    };
+    const { data: newRow, error } = await supabase.from('consultations').insert(insertData).select().single();
+    if (!error && newRow) {
+      setUserConsultations(prev => [newRow, ...prev]);
+    } else {
+      console.error("Error submitting consultation:", error);
+    }
+  };
+
+  // Save scroll progress locally for reader
   const saveScrollPosition = (slug: string, progress: number) => {
     if (!currentUser) return;
     const currentPositions = currentUser.savedScrollPositions || {};
@@ -294,66 +339,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentUser(updated);
   };
 
-  // Action: Get scroll progress
   const getScrollPosition = (slug: string): number => {
     if (!currentUser || !currentUser.savedScrollPositions) return 0;
     return currentUser.savedScrollPositions[slug] || 0;
   };
 
-  // Action: Booking Consulting
-  const bookConsulting = (booking: Omit<ConsultingBooking, 'id' | 'submittedAt'>) => {
-    const newBooking: ConsultingBooking = {
-      ...booking,
-      id: Math.random().toString(36).substr(2, 9),
-      submittedAt: new Date().toISOString()
-    };
-    const updated = [...bookings, newBooking];
-    localStorage.setItem('eg_bookings', JSON.stringify(updated));
-    setBookings(updated);
-  };
-
-  // Action: Submit Problem (after ₹9 payment)
-  const submitProblem = (data: Omit<ProblemSubmission, 'id' | 'submittedAt' | 'status' | 'paymentRef'>): ProblemSubmission => {
-    const newSubmission: ProblemSubmission = {
-      ...data,
-      id: Math.random().toString(36).substr(2, 9),
-      submittedAt: new Date().toISOString(),
-      status: 'pending',
-      paymentRef: 'PAY-' + Math.random().toString(36).substr(2, 8).toUpperCase()
-    };
-    const updated = [...problemSubmissions, newSubmission];
-    localStorage.setItem('eg_problem_submissions', JSON.stringify(updated));
-    setProblemSubmissions(updated);
-    return newSubmission;
-  };
-
-  // Action: Toggle Wishlist
-  const toggleWishlist = (id: string) => {
-    let updated;
-    if (wishlist.includes(id)) {
-      updated = wishlist.filter(item => item !== id);
-    } else {
-      updated = [...wishlist, id];
-    }
-    localStorage.setItem('eg_wishlist', JSON.stringify(updated));
-    setWishlist(updated);
-  };
-
-  // Action: Toggle Notifications
+  const setOfflineMode = (offline: boolean) => setOfflineMode(offline);
   const toggleNotifications = () => {
     const updated = !notificationsEnabled;
     localStorage.setItem('eg_notifications', updated ? '1' : '0');
     setNotificationsEnabled(updated);
   };
-
-  // Action: Toggle Dark Mode
   const toggleDarkMode = () => {
     const updated = !isDarkMode;
     localStorage.setItem('eg_theme', updated ? 'dark' : 'light');
     setIsDarkMode(updated);
   };
 
-  // Handle Intent Persistence
   const saveIntent = (slug: string, price: number) => {
     sessionStorage.setItem('eg_purchase_intent', JSON.stringify({ slug, price }));
   };
@@ -373,15 +375,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider value={{
       redirectAfterAuth,
       currentUser,
+      isAdmin,
+      playbooks,
+      blogUpdates,
       purchasedSlugs,
+      wishlistItems,
+      userConsultations,
       isLoading,
       currentPath,
       routeParams,
-      bookings,
-      problemSubmissions,
-      wishlist,
-      submitProblem,
-      toggleWishlist,
       offlineMode,
       notificationsEnabled,
       isDarkMode,
@@ -391,9 +393,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       logout,
       setProfessionalRole,
       acquirePlaybook,
+      hasPurchased,
+      toggleWishlist,
+      isWishlisted,
+      submitConsultation,
       saveScrollPosition,
       getScrollPosition,
-      bookConsulting,
       setOfflineMode,
       toggleNotifications,
       toggleDarkMode,
@@ -401,7 +406,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       saveIntent,
       getAndClearIntent,
       isAuthModalOpen,
-      setAuthModalOpen
+      setAuthModalOpen,
+      refreshGlobalData: fetchGlobalData
     }}>
       {children}
     </AppContext.Provider>
