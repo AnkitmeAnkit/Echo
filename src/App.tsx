@@ -18,21 +18,14 @@ import { AuthModal } from './components/AuthModal';
 
 
 function AppContent() {
-  const { currentPath, routeParams, currentUser, purchasedSlugs, playbooks, isLoading, isDarkMode, isAuthModalOpen, navigate, login, saveIntent, setAuthModalOpen } = useAppState();
+  const { currentPath, routeParams, currentUser, purchasedSlugs, playbooks, isLoading, isAuthModalOpen, navigate, login, saveIntent, setAuthModalOpen } = useAppState();
 
   // Global scroll-to-top on route change
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentPath]);
 
-  // Dark Mode side effect
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
+
 
   // ENFORCE APPENDIX A MODULE ROUTE SECURITY GUARDS:
   // Pre-route renderer validation intercepts

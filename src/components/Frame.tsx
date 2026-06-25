@@ -4,7 +4,7 @@ import { Moon, Sun, Lock, LayoutDashboard, Linkedin, Twitter, Youtube, Github } 
 import { Button } from './Button';
 
 export function Frame({ children }: { children: React.ReactNode }) {
-  const { isDarkMode, toggleDarkMode, currentUser, logout, setAuthModalOpen, navigate, currentPath } = useAppState();
+  const { currentUser, logout, setAuthModalOpen, navigate, currentPath } = useAppState();
 
   const isDashboard = currentPath === '/dashboard';
 
@@ -56,9 +56,7 @@ export function Frame({ children }: { children: React.ReactNode }) {
 
           {/* Actions */}
           <div className="flex items-center gap-4">
-              <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-canvas transition-colors text-text-secondary">
-                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
+
 
             {currentUser ? (
               <div className="flex items-center gap-2">

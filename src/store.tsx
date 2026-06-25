@@ -20,7 +20,7 @@ interface AppContextType {
   routeParams: Record<string, string>;
   offlineMode: boolean;
   notificationsEnabled: boolean;
-  isDarkMode: boolean;
+
   isAuthModalOpen: boolean;
   isLoading: boolean;
   
@@ -45,7 +45,7 @@ interface AppContextType {
   
   setOfflineMode: (offline: boolean) => void;
   toggleNotifications: () => void;
-  toggleDarkMode: () => void;
+
   navigate: (path: string) => void;
   saveIntent: (slug: string, price: number) => void;
   getAndClearIntent: () => { slug: string; price: number } | null;
@@ -77,7 +77,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isLoading, setIsLoadingState] = useState<boolean>(false);
   const [offlineMode, setOfflineMode] = useState<boolean>(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(false);
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+
   const [isAuthModalOpen, setAuthModalOpen] = useState<boolean>(false);
 
   // Helper: Route Parser
@@ -211,8 +211,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const savedNotif = localStorage.getItem('eg_notifications') === '1';
     setNotificationsEnabled(savedNotif);
 
-    const savedTheme = localStorage.getItem('eg_theme');
-    setIsDarkMode(savedTheme === 'dark');
 
     return () => {
       subscription.unsubscribe();
@@ -350,11 +348,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('eg_notifications', updated ? '1' : '0');
     setNotificationsEnabled(updated);
   };
-  const toggleDarkMode = () => {
-    const updated = !isDarkMode;
-    localStorage.setItem('eg_theme', updated ? 'dark' : 'light');
-    setIsDarkMode(updated);
-  };
+
 
   const saveIntent = (slug: string, price: number) => {
     sessionStorage.setItem('eg_purchase_intent', JSON.stringify({ slug, price }));
@@ -386,7 +380,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       routeParams,
       offlineMode,
       notificationsEnabled,
-      isDarkMode,
+
       setLoading,
       login,
       register,
@@ -401,7 +395,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       getScrollPosition,
       setOfflineMode,
       toggleNotifications,
-      toggleDarkMode,
+
       navigate,
       saveIntent,
       getAndClearIntent,

@@ -8,35 +8,24 @@
 
   /* Primary Brand Colors */
   --color-brand-primary: #4F46E5;
-  /* Vivid Blue / Indigo-600 */
   --color-brand-primary-hover: #4338CA;
-  --color-brand-lavender: #E0E7FF;
-  /* Soft Lavender / Indigo-100 */
-  --color-brand-mint: #D1FAE5;
-  /* Mint Green / Emerald-100 */
+  --color-brand-lavender: #312E81;
+  --color-brand-mint: #064E3B;
 
   /* Layout Colors */
-  --color-canvas: #F9FAFB;
-  /* Light Gray Background */
-  --color-canvas-white: #FFFFFF;
-  /* Pure White Background */
+  --color-canvas: #0F172A;
+  --color-canvas-white: #1E293B;
   --color-footer-bg: #020617;
-  /* Deep Dark Blue / Slate-950 */
 
   /* Text Colors */
-  --color-text-primary: #0F172A;
-  /* Slate-900 / Deep Charcoal */
-  --color-text-secondary: #475569;
-  /* Slate-600 */
-  --color-text-tertiary: #94A3B8;
-  /* Slate-400 */
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-tertiary: #64748B;
   --color-text-inverse: #FFFFFF;
 
   /* Utility Colors */
-  --color-border-light: #E2E8F0;
-  /* Slate-200 */
+  --color-border-light: #334155;
   --color-success: #10B981;
-  /* Emerald-500 */
 
   /* Border Radii */
   --radius-xs: 4px;
@@ -49,39 +38,16 @@
   --radius-full: 9999px;
 
   /* Box Shadows */
-  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.05);
-  --shadow-lavender: 0 10px 40px rgba(79, 70, 229, 0.1);
-  --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.02), 0 10px 40px rgba(0, 0, 0, 0.04);
-}
-
-.dark {
-  --color-canvas: #0F172A;
-  /* Slate-900 */
-  --color-canvas-white: #1E293B;
-  /* Slate-800 */
-  --color-text-primary: #F8FAFC;
-  /* Slate-50 */
-  --color-text-secondary: #94A3B8;
-  /* Slate-400 */
-  --color-text-tertiary: #64748B;
-  /* Slate-500 */
-  --color-border-light: #334155;
-  /* Slate-700 */
-  --color-brand-lavender: #312E81;
-  /* Indigo-900 */
-  --color-brand-mint: #064E3B;
-  /* Emerald-900 */
   --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.4);
   --shadow-lavender: 0 10px 40px rgba(79, 70, 229, 0.2);
   --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.2), 0 10px 40px rgba(0, 0, 0, 0.3);
-  background-color: #0F172A;
 }
 
 html {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  background-color: #F9FAFB;
+  background-color: var(--color-canvas);
   font-size: 110%;
 }
 
