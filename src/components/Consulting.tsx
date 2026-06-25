@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { useAppState } from "../store";
 import { Card } from "./Card";
 import { Button } from "./Button";
@@ -143,7 +143,13 @@ export function Consulting() {
               <p className="text-text-secondary text-sm">Pay only ₹9 to connect. No hidden charges. Final pricing only after expert discussion.</p>
             </div>
           </div>
-          <Button icon={<Lock className="w-4 h-4" />} className="flex-shrink-0">Get Started for ₹9</Button>
+          <Button
+            icon={currentUser ? <ArrowRight className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+            className="flex-shrink-0"
+            onClick={() => currentUser ? navigate('/solutions/submit') : setAuthModalOpen(true)}
+          >
+            {currentUser ? 'Get Started for ₹9' : 'Login to Get Started'}
+          </Button>
         </Card>
       </div>
 

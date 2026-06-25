@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, ConsultingBooking, Playbook } from './types';
+import { User, ConsultingBooking, Playbook, ProblemSubmission } from './types';
 import { PLAYBOOKS } from './data';
 import { supabase } from './supabaseClient';
 
@@ -9,6 +9,7 @@ interface AppContextType {
   currentPath: string;
   routeParams: Record<string, string>;
   bookings: ConsultingBooking[];
+  problemSubmissions: ProblemSubmission[];
   offlineMode: boolean;
   notificationsEnabled: boolean;
   isDarkMode: boolean;
@@ -25,6 +26,7 @@ interface AppContextType {
   saveScrollPosition: (slug: string, progress: number) => void;
   getScrollPosition: (slug: string) => number;
   bookConsulting: (booking: Omit<ConsultingBooking, 'id' | 'submittedAt'>) => void;
+  submitProblem: (data: Omit<ProblemSubmission, 'id' | 'submittedAt' | 'status' | 'paymentRef'>) => ProblemSubmission;
   setOfflineMode: (offline: boolean) => void;
   toggleNotifications: () => void;
   toggleDarkMode: () => void;
@@ -47,6 +49,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [purchasedSlugs, setPurchasedSlugs] = useState<string[]>([]);
   const [isLoading, setIsLoadingState] = useState<boolean>(false);
   const [bookings, setBookings] = useState<ConsultingBooking[]>([]);
+  const [problemSubmissions, setProblemSubmissions] = useState<ProblemSubmission[]>([]);
   const [offlineMode, setOfflineMode] = useState<boolean>(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
@@ -123,6 +126,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           name: supaUser.user_metadata?.full_name || supaUser.email?.split('@')[0] || 'Member',
           role: supaUser.user_metadata?.role || 'Member',
           isPremium: false,
+          phone: supaUser.user_metadata?.phone || '',
           joinedAt: supaUser.created_at || new Date().toISOString(),
           savedScrollPositions: {}
         };
@@ -154,6 +158,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setBookings(JSON.parse(savedBookings));
       } catch (e) {
         console.error('Error parsing saved bookings', e);
+      }
+    }
+
+    // 3b. Problem Submissions
+    const savedSubmissions = localStorage.getItem('eg_problem_submissions');
+    if (savedSubmissions) {
+      try {
+        setProblemSubmissions(JSON.parse(savedSubmissions));
+      } catch (e) {
+        console.error('Error parsing saved problem submissions', e);
       }
     }
 
@@ -285,6 +299,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setBookings(updated);
   };
 
+  // Action: Submit Problem (after ₹9 payment)
+  const submitProblem = (data: Omit<ProblemSubmission, 'id' | 'submittedAt' | 'status' | 'paymentRef'>): ProblemSubmission => {
+    const newSubmission: ProblemSubmission = {
+      ...data,
+      id: Math.random().toString(36).substr(2, 9),
+      submittedAt: new Date().toISOString(),
+      status: 'pending',
+      paymentRef: 'PAY-' + Math.random().toString(36).substr(2, 8).toUpperCase()
+    };
+    const updated = [...problemSubmissions, newSubmission];
+    localStorage.setItem('eg_problem_submissions', JSON.stringify(updated));
+    setProblemSubmissions(updated);
+    return newSubmission;
+  };
+
   // Action: Toggle Notifications
   const toggleNotifications = () => {
     const updated = !notificationsEnabled;
@@ -324,6 +353,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       currentPath,
       routeParams,
       bookings,
+      problemSubmissions,
+      submitProblem,
       offlineMode,
       notificationsEnabled,
       isDarkMode,

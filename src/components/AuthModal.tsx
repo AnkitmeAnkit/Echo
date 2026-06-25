@@ -21,6 +21,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
 
   const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -35,7 +36,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   useEffect(() => { setMounted(true); }, []);
 
   const reset = () => {
-    setName(''); setEmail(''); setPassword('');
+    setName(''); setEmail(''); setPassword(''); setPhone('');
     setNameError(''); setEmailError(''); setPasswordError('');
     setAuthError(''); setSignUpSuccess(false); setSignUpEmail('');
   };
@@ -76,7 +77,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: name } }
+          options: { data: { full_name: name, phone } }
         });
         if (error) throw error;
         setSignUpEmail(email);
@@ -268,6 +269,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             <span>⚠</span> {nameError}
                           </p>
                         )}
+                      </div>
+                    )}
+
+                    {/* Phone Number — signup only */}
+                    {!isLogin && (
+                      <div>
+                        <label htmlFor="auth-phone" className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                          Phone Number
+                        </label>
+                        <input
+                          id="auth-phone"
+                          type="tel"
+                          autoComplete="tel"
+                          placeholder="+91 98765 43210"
+                          value={phone}
+                          onChange={e => setPhone(e.target.value)}
+                          className={inputClass(false)}
+                        />
                       </div>
                     )}
 

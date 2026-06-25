@@ -3,21 +3,28 @@ import { useAppState } from '../store';
 import { Card } from './Card';
 import { Button } from './Button';
 import { Badge } from './Badge';
+import { ProblemSubmission } from '../types';
 import { 
   Home, BookOpen, Zap, Heart, Bell, Search, Filter, 
-  Wand2, ArrowRight
+  Wand2, ArrowRight, Send, Clock, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import { PLAYBOOKS } from '../data';
 
+const statusConfig: Record<ProblemSubmission['status'], { label: string; icon: React.ReactNode; color: string }> = {
+  pending:   { label: 'Pending',   icon: <Clock className="w-3 h-3" />,        color: 'bg-amber-100 text-amber-700' },
+  in_review: { label: 'In Review', icon: <AlertCircle className="w-3 h-3" />,  color: 'bg-blue-100 text-blue-700'  },
+  resolved:  { label: 'Resolved',  icon: <CheckCircle2 className="w-3 h-3" />, color: 'bg-emerald-100 text-emerald-700' },
+};
+
 export function Dashboard() {
-  const { currentUser, navigate, setAuthModalOpen, purchasedSlugs } = useAppState();
+  const { currentUser, navigate, setAuthModalOpen, purchasedSlugs, problemSubmissions } = useAppState();
 
   const sidebarLinks = [
-    { icon: <Home className="w-5 h-5" />, label: "Dashboard", active: true },
-    { icon: <BookOpen className="w-5 h-5" />, label: "My Library", active: false },
-    { icon: <Zap className="w-5 h-5" />, label: "Solutions", active: false },
-    { icon: <Heart className="w-5 h-5" />, label: "Wishlist", active: false },
-    { icon: <Bell className="w-5 h-5" />, label: "Updates", active: false },
+    { icon: <Home className="w-5 h-5" />,     label: 'Dashboard',   active: false },
+    { icon: <BookOpen className="w-5 h-5" />, label: 'My Library',  active: false },
+    { icon: <Zap className="w-5 h-5" />,      label: 'Solutions',   active: true  },
+    { icon: <Heart className="w-5 h-5" />,    label: 'Wishlist',    active: false },
+    { icon: <Bell className="w-5 h-5" />,     label: 'Updates',     active: false },
   ];
 
   return (
@@ -153,7 +160,80 @@ export function Dashboard() {
               </div>
             )}
           </div>
-          
+
+          {/* ── My Solutions Section ────────────────────────────── */}
+          <div className="animate-fade-in-up mt-14" style={{ animationDelay: '0.2s' }}>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-display font-bold">My Solutions</h2>
+                <Badge variant="lavender">{problemSubmissions.length} submitted</Badge>
+              </div>
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Send className="w-4 h-4" />}
+                onClick={() => navigate('/solutions/submit')}
+              >
+                Submit a Problem
+              </Button>
+            </div>
+
+            {problemSubmissions.length === 0 ? (
+              <Card className="flex items-center justify-center min-h-[280px] border-dashed border-2 border-border-light bg-canvas-white/50">
+                <div className="text-center max-w-sm px-6">
+                  <div className="w-20 h-20 bg-brand-lavender rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                    <Zap className="w-10 h-10 text-brand-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">No submissions yet</h3>
+                  <p className="text-text-secondary text-sm mb-8">
+                    Submit your technical problem and our team will design a custom solution for you.
+                  </p>
+                  <Button icon={<Send className="w-4 h-4" />} onClick={() => navigate('/solutions/submit')}>
+                    Submit a Problem — ₹9
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {[...problemSubmissions].reverse().map((sub, i) => {
+                  const cfg = statusConfig[sub.status];
+                  return (
+                    <div
+                      key={sub.id}
+                      className="bg-canvas-white border border-border-light rounded-2xl p-6 flex flex-col md:flex-row md:items-start gap-4 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      {/* Icon */}
+                      <div className="w-10 h-10 bg-brand-lavender rounded-full flex items-center justify-center flex-shrink-0">
+                        <Zap className="w-5 h-5 text-brand-primary" />
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-text-primary font-semibold text-sm leading-snug mb-1 line-clamp-2">
+                          {sub.problem.length > 100 ? sub.problem.slice(0, 100) + '…' : sub.problem}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-text-tertiary">
+                          <span>{sub.name}</span>
+                          {sub.phone && <><span>·</span><span>{sub.phone}</span></>}
+                          <span>·</span>
+                          <span>{new Date(sub.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                          <span>·</span>
+                          <span className="font-mono">{sub.paymentRef}</span>
+                        </div>
+                      </div>
+
+                      {/* Status Badge */}
+                      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold flex-shrink-0 ${cfg.color}`}>
+                        {cfg.icon}
+                        {cfg.label}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
         </div>
       </main>
     </div>

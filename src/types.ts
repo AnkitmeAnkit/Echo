@@ -26,6 +26,7 @@ export interface User {
   role: string;
   isPremium: boolean;
   joinedAt: string;
+  phone?: string;
   savedScrollPositions?: Record<string, number>; // slug -> scroll percentage
 }
 
@@ -44,4 +45,15 @@ export interface ConsultingBooking {
   date: string;
   timeSlot: string;
   submittedAt: string;
+}
+
+export interface ProblemSubmission {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  problem: string;
+  submittedAt: string;
+  status: 'pending' | 'in_review' | 'resolved';
+  paymentRef: string;
 }
