@@ -344,7 +344,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return currentUser.savedScrollPositions[slug] || 0;
   };
 
-  const setOfflineMode = (offline: boolean) => setOfflineMode(offline);
+
   const toggleNotifications = () => {
     const updated = !notificationsEnabled;
     localStorage.setItem('eg_notifications', updated ? '1' : '0');
