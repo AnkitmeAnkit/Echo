@@ -109,11 +109,11 @@ export function AdminDashboard() {
 
   if (!currentUser || !isAdmin) {
     return (
-      <div className="w-full bg-black min-h-screen flex items-center justify-center p-6 text-center">
+      <div className="w-full bg-canvas dark:bg-black min-h-screen flex items-center justify-center p-6 text-center">
         <div>
           <ShieldAlert className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
-          <p className="text-zinc-400 mb-6">You do not have administrative privileges.</p>
+          <h1 className="text-2xl font-bold text-text-primary dark:text-white mb-2">Access Denied</h1>
+          <p className="text-text-secondary dark:text-zinc-400 mb-6">You do not have administrative privileges.</p>
           <Button onClick={() => navigate('/')}>Return Home</Button>
         </div>
       </div>
@@ -128,23 +128,23 @@ export function AdminDashboard() {
   ];
 
   return (
-    <div className="w-full bg-black min-h-screen pb-20">
+    <div className="w-full bg-canvas dark:bg-black min-h-screen pb-20">
       {/* Header */}
-      <div className="bg-zinc-950 border-b border-zinc-800 sticky top-0 z-40">
+      <div className="bg-canvas dark:bg-zinc-950 border-b border-border-light dark:border-zinc-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-display font-bold text-white">Admin Console</h1>
-            <p className="text-xs text-zinc-500 font-mono mt-1">SUPERUSER ACCESS</p>
+            <h1 className="text-2xl font-display font-bold text-text-primary dark:text-white">Admin Console</h1>
+            <p className="text-xs text-text-tertiary dark:text-zinc-500 font-mono mt-1">SUPERUSER ACCESS</p>
           </div>
-          <div className="flex gap-2 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
+          <div className="flex gap-2 bg-canvas-white dark:bg-zinc-900 p-1 rounded-lg border border-border-light dark:border-zinc-800">
             {tabs.map(t => (
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id as any)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
                   activeTab === t.id 
-                    ? 'bg-brand-primary text-white' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                    ? 'bg-brand-primary text-text-primary dark:text-white' 
+                    : 'text-text-secondary dark:text-zinc-400 hover:text-text-primary dark:text-white hover:bg-border-light dark:bg-zinc-800'
                 }`}
               >
                 {t.icon}
@@ -160,15 +160,15 @@ export function AdminDashboard() {
         {activeTab === 'playbooks' && (
           <div className="animate-fade-in-up">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Manage Playbooks</h2>
+              <h2 className="text-xl font-bold text-text-primary dark:text-white">Manage Playbooks</h2>
               <Button icon={<Plus className="w-4 h-4" />} onClick={() => { setEditingPlaybook({}); setEditingDriveLink(''); setShowPlaybookForm(true); }}>
                 Add Playbook
               </Button>
             </div>
             
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-              <table className="w-full text-left text-sm text-zinc-300">
-                <thead className="bg-zinc-950 border-b border-zinc-800 text-zinc-400">
+            <div className="bg-canvas-white dark:bg-zinc-900 border border-border-light dark:border-zinc-800 rounded-xl overflow-hidden">
+              <table className="w-full text-left text-sm text-text-secondary dark:text-zinc-300">
+                <thead className="bg-canvas dark:bg-zinc-950 border-b border-border-light dark:border-zinc-800 text-text-secondary dark:text-zinc-400">
                   <tr>
                     <th className="px-6 py-4 font-semibold">Title / Slug</th>
                     <th className="px-6 py-4 font-semibold">Track / Price</th>
@@ -177,23 +177,23 @@ export function AdminDashboard() {
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
                   {playbooks.map(p => (
-                    <tr key={p.id} className="hover:bg-zinc-950/50 transition-colors">
+                    <tr key={p.id} className="hover:bg-canvas dark:bg-zinc-950/50 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="font-bold text-white mb-1">{p.title}</div>
-                        <div className="text-xs text-zinc-500 font-mono">{p.slug}</div>
+                        <div className="font-bold text-text-primary dark:text-white mb-1">{p.title}</div>
+                        <div className="text-xs text-text-tertiary dark:text-zinc-500 font-mono">{p.slug}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="capitalize mb-1">{p.track}</div>
                         <div className="text-xs font-bold text-brand-primary">₹{p.price}</div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button onClick={async () => { setEditingPlaybook(p); const link = await getPlaybookDownloadLink(p.slug); setEditingDriveLink(link || ''); setShowPlaybookForm(true); }} className="p-2 text-zinc-400 hover:text-white transition-colors"><Pencil className="w-4 h-4" /></button>
+                        <button onClick={async () => { setEditingPlaybook(p); const link = await getPlaybookDownloadLink(p.slug); setEditingDriveLink(link || ''); setShowPlaybookForm(true); }} className="p-2 text-text-secondary dark:text-zinc-400 hover:text-text-primary dark:text-white transition-colors"><Pencil className="w-4 h-4" /></button>
                         <button onClick={() => p.id && handleDeletePlaybook(p.id)} className="p-2 text-red-500 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
                       </td>
                     </tr>
                   ))}
                   {playbooks.length === 0 && (
-                    <tr><td colSpan={3} className="px-6 py-8 text-center text-zinc-500">No playbooks found.</td></tr>
+                    <tr><td colSpan={3} className="px-6 py-8 text-center text-text-tertiary dark:text-zinc-500">No playbooks found.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -204,11 +204,11 @@ export function AdminDashboard() {
         {/* Consultations Tab */}
         {activeTab === 'consultations' && (
           <div className="animate-fade-in-up">
-            <h2 className="text-xl font-bold text-white mb-6">Manage Consultations & Submissions</h2>
+            <h2 className="text-xl font-bold text-text-primary dark:text-white mb-6">Manage Consultations & Submissions</h2>
             
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-              <table className="w-full text-left text-sm text-zinc-300">
-                <thead className="bg-zinc-950 border-b border-zinc-800 text-zinc-400">
+            <div className="bg-canvas-white dark:bg-zinc-900 border border-border-light dark:border-zinc-800 rounded-xl overflow-hidden">
+              <table className="w-full text-left text-sm text-text-secondary dark:text-zinc-300">
+                <thead className="bg-canvas dark:bg-zinc-950 border-b border-border-light dark:border-zinc-800 text-text-secondary dark:text-zinc-400">
                   <tr>
                     <th className="px-6 py-4 font-semibold">User Details</th>
                     <th className="px-6 py-4 font-semibold">Problem</th>
@@ -218,22 +218,22 @@ export function AdminDashboard() {
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
                   {allConsultations.map(c => (
-                    <tr key={c.id} className="hover:bg-zinc-950/50 transition-colors">
+                    <tr key={c.id} className="hover:bg-canvas dark:bg-zinc-950/50 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="font-bold text-white mb-1">{c.full_name}</div>
-                        <div className="text-xs text-zinc-500">{c.email}</div>
-                        <div className="text-xs text-zinc-500">{c.phone}</div>
+                        <div className="font-bold text-text-primary dark:text-white mb-1">{c.full_name}</div>
+                        <div className="text-xs text-text-tertiary dark:text-zinc-500">{c.email}</div>
+                        <div className="text-xs text-text-tertiary dark:text-zinc-500">{c.phone}</div>
                       </td>
                       <td className="px-6 py-4 max-w-xs">
                         <div className="font-semibold text-brand-primary mb-1 text-xs uppercase tracking-wider">{c.problem_type}</div>
-                        <div className="font-bold text-white mb-1 line-clamp-1">{c.problem_title}</div>
-                        <div className="text-xs text-zinc-500 line-clamp-2">{c.details}</div>
+                        <div className="font-bold text-text-primary dark:text-white mb-1 line-clamp-1">{c.problem_title}</div>
+                        <div className="text-xs text-text-tertiary dark:text-zinc-500 line-clamp-2">{c.details}</div>
                       </td>
                       <td className="px-6 py-4">
                         <select 
                           value={c.status}
                           onChange={(e) => handleUpdateConsultationStatus(c.id, e.target.value)}
-                          className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-xs focus:outline-none focus:border-brand-primary text-white"
+                          className="bg-canvas dark:bg-zinc-950 border border-border-light dark:border-zinc-800 rounded px-2 py-1 text-xs focus:outline-none focus:border-brand-primary text-text-primary dark:text-white"
                         >
                           <option value="pending">Pending</option>
                           <option value="in_review">In Review</option>
@@ -241,13 +241,13 @@ export function AdminDashboard() {
                         </select>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-bold text-white mb-1">₹{c.price}</div>
-                        <div className="text-[10px] font-mono text-zinc-500 bg-zinc-950 px-1 py-0.5 rounded border border-zinc-800 inline-block">{c.payment_ref}</div>
+                        <div className="font-bold text-text-primary dark:text-white mb-1">₹{c.price}</div>
+                        <div className="text-[10px] font-mono text-text-tertiary dark:text-zinc-500 bg-canvas dark:bg-zinc-950 px-1 py-0.5 rounded border border-border-light dark:border-zinc-800 inline-block">{c.payment_ref}</div>
                       </td>
                     </tr>
                   ))}
                   {allConsultations.length === 0 && (
-                    <tr><td colSpan={4} className="px-6 py-8 text-center text-zinc-500">No consultations found.</td></tr>
+                    <tr><td colSpan={4} className="px-6 py-8 text-center text-text-tertiary dark:text-zinc-500">No consultations found.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -259,15 +259,15 @@ export function AdminDashboard() {
         {activeTab === 'updates' && (
           <div className="animate-fade-in-up">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Manage Blog Updates</h2>
+              <h2 className="text-xl font-bold text-text-primary dark:text-white">Manage Blog Updates</h2>
               <Button icon={<Plus className="w-4 h-4" />} onClick={() => { setEditingUpdate({}); setShowUpdateForm(true); }}>
                 Add Update
               </Button>
             </div>
             
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-              <table className="w-full text-left text-sm text-zinc-300">
-                <thead className="bg-zinc-950 border-b border-zinc-800 text-zinc-400">
+            <div className="bg-canvas-white dark:bg-zinc-900 border border-border-light dark:border-zinc-800 rounded-xl overflow-hidden">
+              <table className="w-full text-left text-sm text-text-secondary dark:text-zinc-300">
+                <thead className="bg-canvas dark:bg-zinc-950 border-b border-border-light dark:border-zinc-800 text-text-secondary dark:text-zinc-400">
                   <tr>
                     <th className="px-6 py-4 font-semibold">Title / Date</th>
                     <th className="px-6 py-4 font-semibold">Category</th>
@@ -276,22 +276,22 @@ export function AdminDashboard() {
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
                   {blogUpdates.map(u => (
-                    <tr key={u.id} className="hover:bg-zinc-950/50 transition-colors">
+                    <tr key={u.id} className="hover:bg-canvas dark:bg-zinc-950/50 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="font-bold text-white mb-1">{u.title}</div>
-                        <div className="text-xs text-zinc-500">{new Date(u.publishedAt || new Date()).toLocaleDateString()}</div>
+                        <div className="font-bold text-text-primary dark:text-white mb-1">{u.title}</div>
+                        <div className="text-xs text-text-tertiary dark:text-zinc-500">{new Date(u.publishedAt || new Date()).toLocaleDateString()}</div>
                       </td>
                       <td className="px-6 py-4">
                         <Badge variant="lavender">{u.category}</Badge>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button onClick={() => { setEditingUpdate(u); setShowUpdateForm(true); }} className="p-2 text-zinc-400 hover:text-white transition-colors"><Pencil className="w-4 h-4" /></button>
+                        <button onClick={() => { setEditingUpdate(u); setShowUpdateForm(true); }} className="p-2 text-text-secondary dark:text-zinc-400 hover:text-text-primary dark:text-white transition-colors"><Pencil className="w-4 h-4" /></button>
                         <button onClick={() => u.id && handleDeleteUpdate(u.id)} className="p-2 text-red-500 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
                       </td>
                     </tr>
                   ))}
                   {blogUpdates.length === 0 && (
-                    <tr><td colSpan={3} className="px-6 py-8 text-center text-zinc-500">No updates found.</td></tr>
+                    <tr><td colSpan={3} className="px-6 py-8 text-center text-text-tertiary dark:text-zinc-500">No updates found.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -302,11 +302,11 @@ export function AdminDashboard() {
         {/* Users Tab */}
         {activeTab === 'users' && (
           <div className="animate-fade-in-up">
-            <h2 className="text-xl font-bold text-white mb-6">User Directory</h2>
+            <h2 className="text-xl font-bold text-text-primary dark:text-white mb-6">User Directory</h2>
             
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-              <table className="w-full text-left text-sm text-zinc-300">
-                <thead className="bg-zinc-950 border-b border-zinc-800 text-zinc-400">
+            <div className="bg-canvas-white dark:bg-zinc-900 border border-border-light dark:border-zinc-800 rounded-xl overflow-hidden">
+              <table className="w-full text-left text-sm text-text-secondary dark:text-zinc-300">
+                <thead className="bg-canvas dark:bg-zinc-950 border-b border-border-light dark:border-zinc-800 text-text-secondary dark:text-zinc-400">
                   <tr>
                     <th className="px-6 py-4 font-semibold">Name</th>
                     <th className="px-6 py-4 font-semibold">Email</th>
@@ -316,15 +316,15 @@ export function AdminDashboard() {
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
                   {allUsers.map(u => (
-                    <tr key={u.id} className="hover:bg-zinc-950/50 transition-colors">
-                      <td className="px-6 py-4 font-bold text-white">{u.full_name || 'N/A'}</td>
+                    <tr key={u.id} className="hover:bg-canvas dark:bg-zinc-950/50 transition-colors">
+                      <td className="px-6 py-4 font-bold text-text-primary dark:text-white">{u.full_name || 'N/A'}</td>
                       <td className="px-6 py-4">{u.email}</td>
-                      <td className="px-6 py-4 text-zinc-400">{u.phone || '-'}</td>
-                      <td className="px-6 py-4 text-xs text-zinc-500">{new Date(u.created_at).toLocaleDateString()}</td>
+                      <td className="px-6 py-4 text-text-secondary dark:text-zinc-400">{u.phone || '-'}</td>
+                      <td className="px-6 py-4 text-xs text-text-tertiary dark:text-zinc-500">{new Date(u.created_at).toLocaleDateString()}</td>
                     </tr>
                   ))}
                   {allUsers.length === 0 && (
-                    <tr><td colSpan={4} className="px-6 py-8 text-center text-zinc-500">No users found.</td></tr>
+                    <tr><td colSpan={4} className="px-6 py-8 text-center text-text-tertiary dark:text-zinc-500">No users found.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -335,28 +335,28 @@ export function AdminDashboard() {
 
       {/* Playbook Form Modal */}
       {showPlaybookForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto !bg-zinc-900 !border-zinc-800 p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">{editingPlaybook?.id ? 'Edit Playbook' : 'New Playbook'}</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-canvas dark:bg-black/80 backdrop-blur-sm">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto !bg-canvas-white dark:!bg-zinc-900 !border-border-light dark:!border-zinc-800 p-6">
+            <h2 className="text-2xl font-bold text-text-primary dark:text-white mb-6">{editingPlaybook?.id ? 'Edit Playbook' : 'New Playbook'}</h2>
             <form onSubmit={handleSavePlaybook} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-zinc-400 mb-1">Title</label>
-                  <input type="text" required value={editingPlaybook?.title || ''} onChange={e => setEditingPlaybook({...editingPlaybook, title: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white" />
+                  <label className="block text-sm text-text-secondary dark:text-zinc-400 mb-1">Title</label>
+                  <input type="text" required value={editingPlaybook?.title || ''} onChange={e => setEditingPlaybook({...editingPlaybook, title: e.target.value})} className="w-full bg-canvas dark:bg-zinc-950 border border-border-light dark:border-zinc-800 rounded px-3 py-2 text-text-primary dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm text-zinc-400 mb-1">Slug</label>
-                  <input type="text" required value={editingPlaybook?.slug || ''} onChange={e => setEditingPlaybook({...editingPlaybook, slug: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white font-mono text-sm" />
+                  <label className="block text-sm text-text-secondary dark:text-zinc-400 mb-1">Slug</label>
+                  <input type="text" required value={editingPlaybook?.slug || ''} onChange={e => setEditingPlaybook({...editingPlaybook, slug: e.target.value})} className="w-full bg-canvas dark:bg-zinc-950 border border-border-light dark:border-zinc-800 rounded px-3 py-2 text-text-primary dark:text-white font-mono text-sm" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-zinc-400 mb-1">Summary</label>
-                <textarea required rows={2} value={editingPlaybook?.summary || ''} onChange={e => setEditingPlaybook({...editingPlaybook, summary: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white resize-none" />
+                <label className="block text-sm text-text-secondary dark:text-zinc-400 mb-1">Summary</label>
+                <textarea required rows={2} value={editingPlaybook?.summary || ''} onChange={e => setEditingPlaybook({...editingPlaybook, summary: e.target.value})} className="w-full bg-canvas dark:bg-zinc-950 border border-border-light dark:border-zinc-800 rounded px-3 py-2 text-text-primary dark:text-white resize-none" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-zinc-400 mb-1">Track</label>
-                  <select value={editingPlaybook?.track || 'design'} onChange={e => setEditingPlaybook({...editingPlaybook, track: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white">
+                  <label className="block text-sm text-text-secondary dark:text-zinc-400 mb-1">Track</label>
+                  <select value={editingPlaybook?.track || 'design'} onChange={e => setEditingPlaybook({...editingPlaybook, track: e.target.value})} className="w-full bg-canvas dark:bg-zinc-950 border border-border-light dark:border-zinc-800 rounded px-3 py-2 text-text-primary dark:text-white">
                     <option value="design">Design</option>
                     <option value="engineering">Engineering</option>
                     <option value="marketing">Marketing</option>
@@ -365,13 +365,13 @@ export function AdminDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-zinc-400 mb-1">Price (₹)</label>
-                  <input type="number" required value={editingPlaybook?.price || 0} onChange={e => setEditingPlaybook({...editingPlaybook, price: Number(e.target.value)})} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white" />
+                  <label className="block text-sm text-text-secondary dark:text-zinc-400 mb-1">Price (₹)</label>
+                  <input type="number" required value={editingPlaybook?.price || 0} onChange={e => setEditingPlaybook({...editingPlaybook, price: Number(e.target.value)})} className="w-full bg-canvas dark:bg-zinc-950 border border-border-light dark:border-zinc-800 rounded px-3 py-2 text-text-primary dark:text-white" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-zinc-400 mb-1">Google Drive Link (.html file)</label>
-                <input type="url" value={editingDriveLink} onChange={e => setEditingDriveLink(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white" />
+                <label className="block text-sm text-text-secondary dark:text-zinc-400 mb-1">Google Drive Link (.html file)</label>
+                <input type="url" value={editingDriveLink} onChange={e => setEditingDriveLink(e.target.value)} className="w-full bg-canvas dark:bg-zinc-950 border border-border-light dark:border-zinc-800 rounded px-3 py-2 text-text-primary dark:text-white" />
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="outline" type="button" onClick={() => setShowPlaybookForm(false)}>Cancel</Button>
@@ -384,27 +384,27 @@ export function AdminDashboard() {
 
       {/* Update Form Modal */}
       {showUpdateForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto !bg-zinc-900 !border-zinc-800 p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">{editingUpdate?.id ? 'Edit Update' : 'New Update'}</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-canvas dark:bg-black/80 backdrop-blur-sm">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto !bg-canvas-white dark:!bg-zinc-900 !border-border-light dark:!border-zinc-800 p-6">
+            <h2 className="text-2xl font-bold text-text-primary dark:text-white mb-6">{editingUpdate?.id ? 'Edit Update' : 'New Update'}</h2>
             <form onSubmit={handleSaveUpdate} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-zinc-400 mb-1">Title</label>
-                  <input type="text" required value={editingUpdate?.title || ''} onChange={e => setEditingUpdate({...editingUpdate, title: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white" />
+                  <label className="block text-sm text-text-secondary dark:text-zinc-400 mb-1">Title</label>
+                  <input type="text" required value={editingUpdate?.title || ''} onChange={e => setEditingUpdate({...editingUpdate, title: e.target.value})} className="w-full bg-canvas dark:bg-zinc-950 border border-border-light dark:border-zinc-800 rounded px-3 py-2 text-text-primary dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm text-zinc-400 mb-1">Category</label>
-                  <input type="text" required value={editingUpdate?.category || ''} onChange={e => setEditingUpdate({...editingUpdate, category: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white" placeholder="e.g. RELEASE NOTES" />
+                  <label className="block text-sm text-text-secondary dark:text-zinc-400 mb-1">Category</label>
+                  <input type="text" required value={editingUpdate?.category || ''} onChange={e => setEditingUpdate({...editingUpdate, category: e.target.value})} className="w-full bg-canvas dark:bg-zinc-950 border border-border-light dark:border-zinc-800 rounded px-3 py-2 text-text-primary dark:text-white" placeholder="e.g. RELEASE NOTES" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-zinc-400 mb-1">Excerpt</label>
-                <textarea required rows={2} value={editingUpdate?.excerpt || ''} onChange={e => setEditingUpdate({...editingUpdate, excerpt: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white resize-none" />
+                <label className="block text-sm text-text-secondary dark:text-zinc-400 mb-1">Excerpt</label>
+                <textarea required rows={2} value={editingUpdate?.excerpt || ''} onChange={e => setEditingUpdate({...editingUpdate, excerpt: e.target.value})} className="w-full bg-canvas dark:bg-zinc-950 border border-border-light dark:border-zinc-800 rounded px-3 py-2 text-text-primary dark:text-white resize-none" />
               </div>
               <div>
-                <label className="block text-sm text-zinc-400 mb-1">Full Content</label>
-                <textarea required rows={5} value={editingUpdate?.fullContent || ''} onChange={e => setEditingUpdate({...editingUpdate, fullContent: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-white resize-none" />
+                <label className="block text-sm text-text-secondary dark:text-zinc-400 mb-1">Full Content</label>
+                <textarea required rows={5} value={editingUpdate?.fullContent || ''} onChange={e => setEditingUpdate({...editingUpdate, fullContent: e.target.value})} className="w-full bg-canvas dark:bg-zinc-950 border border-border-light dark:border-zinc-800 rounded px-3 py-2 text-text-primary dark:text-white resize-none" />
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="outline" type="button" onClick={() => setShowUpdateForm(false)}>Cancel</Button>
