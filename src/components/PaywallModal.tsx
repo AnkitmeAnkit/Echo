@@ -8,11 +8,10 @@ import { getPlaybookDownloadLink } from '../supabaseClient';
 interface PaywallModalProps {
   isOpen: boolean;
   onClose: () => void;
-  itemType: 'playbook' | 'consultation';
+  itemType: 'playbook';
   itemSlug: string;
   itemTitle: string;
   price: number;
-  consultationFormData?: any;
   onSuccess?: () => void;
 }
 
@@ -23,10 +22,9 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
   itemSlug,
   itemTitle,
   price,
-  consultationFormData,
   onSuccess
 }) => {
-  const { currentUser, acquirePlaybook, submitConsultation } = useAppState();
+  const { currentUser, acquirePlaybook } = useAppState();
   
   const [step, setStep] = useState<'confirm' | 'payment' | 'verifying' | 'success'>('confirm');
   const [upiId, setUpiId] = useState('');
@@ -47,11 +45,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
   if (!isOpen) return null;
 
   const handleFreeAccess = async () => {
-    if (itemType === 'playbook') {
-      await acquirePlaybook(itemSlug, true);
-    } else if (itemType === 'consultation') {
-      await submitConsultation({ ...consultationFormData, amount_paid: 0 });
-    }
+    await acquirePlaybook(itemSlug, true);
     setStep('success');
   };
 
@@ -60,11 +54,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
     setStep('verifying');
     setTimeout(async () => {
       const mockRef = 'MOCK_' + Date.now();
-      if (itemType === 'playbook') {
-        await acquirePlaybook(itemSlug, false, mockRef);
-      } else if (itemType === 'consultation') {
-        await submitConsultation({ ...consultationFormData, amount_paid: price, payment_ref: mockRef });
-      }
+      await acquirePlaybook(itemSlug, false, mockRef);
       setStep('success');
     }, 2500);
   };
@@ -119,7 +109,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
             <div className="text-center">
               <h2 className="text-2xl font-bold text-text-primary dark:text-white mb-2">{itemTitle}</h2>
               <p className="text-text-secondary dark:text-zinc-400 text-sm mb-8">
-                {itemType === 'playbook' ? 'Acquire full access to this playbook.' : 'Book a consultation for this problem.'}
+                Acquire full access to this playbook.
               </p>
 
               {price === 0 ? (
@@ -207,28 +197,26 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                 <CheckCircle2 className="w-10 h-10 text-emerald-400" />
               </div>
               <h2 className="text-2xl font-bold text-text-primary dark:text-white mb-2">
-                {itemType === 'playbook' ? 'Access Granted!' : 'Booked!'}
+                Access Granted!
               </h2>
               <p className="text-text-secondary dark:text-zinc-400 text-sm mb-8">
                 Check your Dashboard to see this added.
               </p>
 
               <div className="w-full space-y-3">
-                {itemType === 'playbook' && (
-                  <div className="space-y-2">
-                    <button
-                      onClick={handleOpenPlaybook}
-                      disabled={isFetchingLink}
-                      className="w-full py-3.5 rounded-xl text-sm font-semibold text-text-primary dark:text-white bg-brand-primary hover:bg-brand-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
-                    >
-                      {isFetchingLink ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                      {isFetchingLink ? 'Loading...' : 'Open Playbook ↗'}
-                    </button>
-                    {downloadError && (
-                      <p className="text-red-400 text-xs mt-2">{downloadError}</p>
-                    )}
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <button
+                    onClick={handleOpenPlaybook}
+                    disabled={isFetchingLink}
+                    className="w-full py-3.5 rounded-xl text-sm font-semibold text-text-primary dark:text-white bg-brand-primary hover:bg-brand-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+                  >
+                    {isFetchingLink ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                    {isFetchingLink ? 'Loading...' : 'Open Playbook ↗'}
+                  </button>
+                  {downloadError && (
+                    <p className="text-red-400 text-xs mt-2">{downloadError}</p>
+                  )}
+                </div>
                 <button
                   onClick={handleDone}
                   className="w-full py-3.5 rounded-xl text-sm font-semibold text-text-secondary dark:text-zinc-300 border border-border-light dark:border-zinc-700 hover:bg-border-light dark:bg-zinc-800 transition-colors"

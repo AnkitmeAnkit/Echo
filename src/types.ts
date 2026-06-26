@@ -5,7 +5,7 @@ export interface Chapter {
   estimatedMinutes: number;
 }
 
-export type PlaybookTrack = 'engineering' | 'design' | 'strategy' | 'Technical' | 'Professional' | 'Custom' | 'Consulting' | string;
+export type PlaybookTrack = 'engineering' | 'design' | 'strategy' | 'Technical' | 'Professional' | 'Custom' | string;
 
 export interface Playbook {
   id?: string;
@@ -36,22 +36,6 @@ export interface BlogUpdate {
   publishedAt?: string;
 }
 
-export interface Consultation {
-  id: string;
-  user_id: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  problem_title?: string;
-  problem_type: 'predefined' | 'custom';
-  details: string;
-  amount_paid: number;
-  payment_ref?: string;
-  payment_status: string;
-  status: 'pending' | 'in_review' | 'resolved';
-  admin_note?: string;
-  submitted_at: string;
-}
 
 export interface User {
   id: string;
@@ -70,11 +54,4 @@ export interface Purchase {
   scrollPosition?: number;
 }
 
-export interface Problem {
-  category: string;
-  title: string;
-  desc: string;
-  time: string;
-  price: number;
-  tagColor: "lavender" | "mint" | "blue" | string;
-}
+

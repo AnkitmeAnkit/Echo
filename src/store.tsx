@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Playbook, BlogUpdate, Consultation } from './types';
+import { User, Playbook, BlogUpdate } from './types';
 import { supabase } from './supabaseClient';
 
 interface AppContextType {
@@ -13,7 +13,6 @@ interface AppContextType {
   // User Data
   purchasedSlugs: string[];
   wishlistItems: Array<{ item_type: string; item_slug: string }>;
-  userConsultations: Consultation[];
   
   // State
   currentPath: string;
@@ -35,10 +34,8 @@ interface AppContextType {
   acquirePlaybook: (slug: string, isFree: boolean, paymentRef?: string) => Promise<void>;
   hasPurchased: (slug: string) => boolean;
   
-  toggleWishlist: (itemType: 'playbook' | 'problem', itemSlug: string) => Promise<void>;
+  toggleWishlist: (itemType: 'playbook', itemSlug: string) => Promise<void>;
   isWishlisted: (itemType: string, itemSlug: string) => boolean;
-  
-  submitConsultation: (data: any) => Promise<void>;
   
   saveScrollPosition: (slug: string, progress: number) => void;
   getScrollPosition: (slug: string) => number;
@@ -72,7 +69,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // User Data
   const [purchasedSlugs, setPurchasedSlugs] = useState<string[]>([]);
   const [wishlistItems, setWishlistItems] = useState<Array<{ item_type: string; item_slug: string }>>([]);
-  const [userConsultations, setUserConsultations] = useState<Consultation[]>([]);
 
   const [isLoading, setIsLoadingState] = useState<boolean>(false);
   const [offlineMode, setOfflineMode] = useState<boolean>(false);
@@ -186,17 +182,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setCurrentUser(appUser);
         
         // Fetch user data
-        const [profileRes, purchasesRes, wishlistRes, consultationsRes] = await Promise.all([
+        const [profileRes, purchasesRes, wishlistRes] = await Promise.all([
           supabase.from('profiles').select('is_admin').eq('id', supaUser.id).single(),
           supabase.from('purchases').select('playbook_slug').eq('user_id', supaUser.id),
-          supabase.from('wishlist').select('item_type, item_slug').eq('user_id', supaUser.id),
-          supabase.from('consultations').select('*').eq('user_id', supaUser.id).order('submitted_at', { ascending: false })
+          supabase.from('wishlist').select('item_type, item_slug').eq('user_id', supaUser.id)
         ]);
 
         if (profileRes.data) setIsAdmin(!!profileRes.data.is_admin);
         if (purchasesRes.data) setPurchasedSlugs(purchasesRes.data.map((p: any) => p.playbook_slug));
         if (wishlistRes.data) setWishlistItems(wishlistRes.data);
-        if (consultationsRes.data) setUserConsultations(consultationsRes.data);
 
       } else {
         localStorage.removeItem('eg_user');
@@ -204,7 +198,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsAdmin(false);
         setPurchasedSlugs([]);
         setWishlistItems([]);
-        setUserConsultations([]);
       }
     });
 
@@ -254,7 +247,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsAdmin(false);
     setPurchasedSlugs([]);
     setWishlistItems([]);
-    setUserConsultations([]);
     navigate('/');
   };
 
@@ -290,7 +282,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Toggle Wishlist
-  const toggleWishlist = async (itemType: 'playbook' | 'problem', itemSlug: string) => {
+  const toggleWishlist = async (itemType: 'playbook', itemSlug: string) => {
     if (!currentUser) return;
     const isW = isWishlisted(itemType, itemSlug);
     
@@ -305,21 +297,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const isWishlisted = (itemType: string, itemSlug: string): boolean => {
     return wishlistItems.some(i => i.item_type === itemType && i.item_slug === itemSlug);
-  };
-
-  // Submit Consultation
-  const submitConsultation = async (data: any) => {
-    if (!currentUser) return;
-    const insertData = {
-      ...data,
-      user_id: currentUser.id
-    };
-    const { data: newRow, error } = await supabase.from('consultations').insert(insertData).select().single();
-    if (!error && newRow) {
-      setUserConsultations(prev => [newRow, ...prev]);
-    } else {
-      console.error("Error submitting consultation:", error);
-    }
   };
 
   // Save scroll progress locally for reader
@@ -374,7 +351,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       blogUpdates,
       purchasedSlugs,
       wishlistItems,
-      userConsultations,
       isLoading,
       currentPath,
       routeParams,
@@ -390,7 +366,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       hasPurchased,
       toggleWishlist,
       isWishlisted,
-      submitConsultation,
       saveScrollPosition,
       getScrollPosition,
       setOfflineMode,

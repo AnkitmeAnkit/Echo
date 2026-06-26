@@ -7,9 +7,6 @@ import { PlaybookDetail } from './components/PlaybookDetail';
 import { Dashboard } from './components/Dashboard';
 import { Reader } from './components/Reader';
 import { Checkout } from './components/Checkout';
-import { Consulting } from './components/Consulting';
-import { SubmitSolution } from './components/SubmitSolution';
-import { AllProblems } from './components/AllProblems';
 import { Updates } from './components/Updates';
 import { AdminDashboard } from './components/AdminDashboard';
 import React, { useState, useEffect } from 'react';
@@ -90,16 +87,6 @@ function AppContent() {
           return null;
         }
         return <Checkout />;
-
-      case '/consulting':
-      case '/solutions':
-        return <Consulting />;
-
-      case '/solutions/submit':
-        return <SubmitSolution />;
-
-      case '/solutions/all':
-        return <AllProblems />;
 
       case '/updates':
         return <Updates />;
