@@ -1,149 +1,166 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppState } from '../store';
 import { Button } from './Button';
 import { Card } from './Card';
+import { Stepper } from './Stepper';
 import { Badge } from './Badge';
 import { 
-  Zap, ArrowRight, BookOpen, Target, Rocket,
+  Zap, ArrowRight, BookOpen, Target, Briefcase, Rocket,
   Users, Award, Clock, ShieldCheck, CheckCircle2, HeadphonesIcon
 } from 'lucide-react';
 
 export function Homepage() {
   const { navigate } = useAppState();
   const processSteps = [
-    { num: "01", title: "Choose a Playbook", description: "Browse our catalogue and pick the AI framework that matches your goal." },
-    { num: "02", title: "Purchase Access", description: "Buy once. Own the playbook forever with lifetime access." },
-    { num: "03", title: "Learn the System", description: "Follow step-by-step chapters built for real-world execution." },
-    { num: "04", title: "Apply Immediately", description: "Use the templates and workflows directly in your daily work." },
-    { num: "05", title: "Scale Your Output", description: "Build compounding leverage with every playbook you master." }
+    { icon: <BookOpen className="w-8 h-8" />, title: "Choose a Playbook", description: "Browse our catalogue and pick the AI framework that matches your goal." },
+    { icon: <Target className="w-8 h-8" />, title: "Purchase Access", description: "Buy once. Own the playbook forever with lifetime access." },
+    { icon: <Rocket className="w-8 h-8" />, title: "Learn the System", description: "Follow step-by-step chapters built for real-world execution." },
+    { icon: <Zap className="w-8 h-8" />, title: "Apply Immediately", description: "Use the templates and workflows directly in your daily work." },
+    { icon: <Award className="w-8 h-8" />, title: "Scale Your Output", description: "Build compounding leverage with every playbook you master." }
   ];
 
   const stats = [
-    { value: "250+", label: "Playbooks" },
-    { value: "1,200+", label: "Professionals" },
-    { value: "98%", label: "Success Rate" },
-    { value: "24/7", label: "Instant Access" },
+    { icon: <BookOpen />, value: "250+", label: "Playbooks", sub: "Actionable AI guides" },
+    { icon: <Users />, value: "1,200+", label: "Professionals", sub: "Using our platform" },
+    { icon: <Award />, value: "98%", label: "Success Rate", sub: "Projects executed successfully" },
+    { icon: <Clock />, value: "24/7", label: "Instant Access", sub: "Start learning immediately" },
   ];
 
   const whyChooseUs = [
-    { icon: <HeadphonesIcon className="w-8 h-8" />, title: "Expert Guidance", desc: "Learn from seasoned AI professionals" },
-    { icon: <CheckCircle2 className="w-8 h-8" />, title: "Practical & Actionable", desc: "Real-world solutions that deliver results" },
-    { icon: <ShieldCheck className="w-8 h-8" />, title: "Secure & Private", desc: "Your data is safe and protected" },
-    { icon: <ShieldCheck className="w-8 h-8" />, title: "Transparent Process", desc: "Clear steps, honest and fair pricing" },
+    { icon: <HeadphonesIcon className="w-6 h-6" />, title: "Expert Guidance", desc: "Learn from seasoned AI professionals" },
+    { icon: <CheckCircle2 className="w-6 h-6" />, title: "Practical & Actionable", desc: "Real-world solutions that deliver results" },
+    { icon: <ShieldCheck className="w-6 h-6" />, title: "Secure & Private", desc: "Your data is safe and protected" },
+    { icon: <ShieldCheck className="w-6 h-6" />, title: "Transparent Process", desc: "Clear steps, honest and fair pricing" },
   ];
 
   return (
     <div className="w-full">
-      {/* Hero Section */}
-      <section className="relative pt-16 pb-16 overflow-hidden bg-bg-primary border-b-4 border-border-main">
-        <div className="w-full px-8 lg:px-16 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-7">
-            <Badge variant="mint" className="mb-8 border-4 border-text-primary px-4 py-2">
-              <Zap className="w-4 h-4 mr-2" /> AI Playbooks for Execution
+      {/* Hero Section — tightened vertical padding, no bottom gap */}
+      <section className="relative pt-20 pb-20 overflow-hidden bg-canvas">
+        <div className="w-full px-8 lg:px-16 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="animate-fade-in-up">
+            <Badge variant="lavender" className="mb-6">
+              <Zap className="w-3 h-3 mr-1" /> AI Playbooks for Execution
             </Badge>
-            <h1 className="text-6xl lg:text-[7rem] font-display font-bold leading-none mb-8 uppercase tracking-tighter text-text-primary drop-shadow-[4px_4px_0_var(--color-accent)]">
-              Master AI<br />
-              <span className="text-accent bg-text-primary px-2 border-4 border-border-main inline-block mt-2">Execution.</span>
+            <h1 className="text-5xl lg:text-7xl font-display font-bold leading-[1.1] mb-6">
+              Master AI <span className="text-brand-primary">Execution.</span><br />
+              Build with <span className="text-brand-primary">Confidence.</span>
             </h1>
-            <p className="text-xl text-text-secondary font-mono mb-12 max-w-2xl leading-relaxed border-l-4 border-accent pl-6 py-2">
-              Expert-crafted playbooks that help you deploy AI in your work the right way. Practical, step-by-step, and built for results. NO FLUFF.
+            <p className="text-lg text-text-secondary mb-10 max-w-xl leading-relaxed">
+              Expert-crafted playbooks that help you deploy AI in your work the right way. Practical, step-by-step, and built for results.
             </p>
-            <div className="flex flex-col sm:flex-row items-center gap-6 mb-12">
-              <Button size="lg" icon={<BookOpen className="w-6 h-6" />} onClick={() => navigate('/playbooks')}>
+            <div className="flex flex-col sm:flex-row items-center gap-4 mb-12">
+              <Button size="lg" icon={<BookOpen className="w-5 h-5" />} onClick={() => navigate('/playbooks')}>
                 Explore Playbooks
               </Button>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex -space-x-3">
+                {[1, 2, 3, 4].map(i => (
+                  <img key={i} src={`https://api.dicebear.com/7.x/notionists/svg?seed=${i}`} alt="user" className="w-10 h-10 rounded-full border-2 border-white bg-brand-lavender" />
+                ))}
+              </div>
+              <div className="text-sm">
+                <p className="font-semibold">Trusted by 1,200+ professionals</p>
+                <div className="flex items-center text-yellow-400">
+                  {'★★★★★'.split('').map((star, i) => <span key={i}>{star}</span>)}
+                  <span className="text-text-secondary ml-2 font-medium">4.9/5</span>
+                </div>
+              </div>
             </div>
           </div>
           
           {/* Hero Visual */}
-          <div className="lg:col-span-5 relative flex items-center justify-center">
-            <div className="w-full aspect-square bg-bg-secondary border-8 border-border-main p-8 relative flex flex-col justify-between transform hover:rotate-2 transition-transform duration-200 shadow-brutal-accent">
-              <div className="w-full flex justify-between items-start">
-                <Target className="w-16 h-16 text-text-primary" />
-                <div className="font-mono text-4xl font-bold text-accent border-4 border-accent p-2">RAW</div>
-              </div>
-              <div className="w-full bg-accent text-bg-primary border-4 border-border-inverse p-6">
-                <h3 className="font-display font-bold text-3xl uppercase leading-none">REAL RESULTS.</h3>
+          <div className="relative animate-fade-in-up flex items-center justify-center">
+            <div className="relative w-full max-w-lg aspect-square mx-auto">
+              <div className="absolute inset-0 bg-gradient-lavender rounded-[3rem] transform rotate-3 opacity-50 blur-xl"></div>
+              <div className="absolute inset-0 bg-gradient-lavender rounded-[3rem] transform -rotate-3 shadow-lavender border border-white/50 p-8 flex flex-col items-center justify-center relative z-10 backdrop-blur-sm">
+                <div className="grid grid-cols-2 gap-6 w-full max-w-xs relative z-20">
+                  <div className="bg-white rounded-2xl p-6 shadow-soft transform -translate-y-4 hover:-translate-y-6 transition-transform">
+                    <div className="w-12 h-12 bg-brand-lavender text-brand-primary rounded-full flex items-center justify-center mb-4 mx-auto">
+                      <Target className="w-6 h-6" />
+                    </div>
+                    <p className="text-center font-bold text-sm">AI Playbooks</p>
+                  </div>
+                  <div className="bg-white rounded-2xl p-6 shadow-soft transform translate-y-4 hover:translate-y-2 transition-transform">
+                    <div className="w-12 h-12 bg-brand-lavender text-brand-primary rounded-full flex items-center justify-center mb-4 mx-auto">
+                      <Target className="w-6 h-6" />
+                    </div>
+                    <p className="text-center font-bold text-sm">Real Results</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Stats - Grid layout */}
-      <section className="w-full border-b-4 border-border-main bg-bg-primary">
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-x-4 divide-y-0 divide-border-main">
-          {stats.map((stat, i) => (
-            <div key={i} className="p-8 flex flex-col items-center justify-center text-center hover:bg-accent hover:text-accent-text transition-none group border-b-4 md:border-b-0 border-border-main">
-              <div className="text-5xl font-display font-bold mb-2 group-hover:text-bg-primary">{stat.value}</div>
-              <div className="text-sm font-mono font-bold uppercase tracking-widest text-text-secondary group-hover:text-bg-secondary">{stat.label}</div>
-            </div>
-          ))}
         </div>
       </section>
 
       {/* Core Offerings */}
-      <section className="py-20 bg-bg-secondary border-b-4 border-border-main">
-        <div className="w-full px-8 lg:px-16 max-w-7xl mx-auto">
-          <div className="mb-12">
-            <Badge variant="outline" className="mb-4 bg-bg-primary border-4 border-border-main"><BookOpen className="w-4 h-4 mr-2"/> PLAYBOOKS</Badge>
-            <h2 className="text-5xl lg:text-7xl font-display font-bold uppercase leading-none mb-6">Learn. Apply.<br/>Master AI.</h2>
-            <p className="text-text-secondary font-mono max-w-2xl text-lg border-l-4 border-border-light pl-6">Step-by-step playbooks to help you enable AI in your work the right way. Well-researched, practical and easy to follow.</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-bg-primary border-4 border-border-main p-8 shadow-brutal hover:-translate-y-2 transition-transform">
-              <h4 className="font-display font-bold text-3xl mb-4 uppercase">Task-Specific</h4>
-              <p className="text-sm font-mono text-text-secondary mb-8 leading-relaxed">Guides for specific tasks to help you work faster and more efficiently with AI.</p>
-              <Button variant="secondary" onClick={() => navigate('/playbooks/all?category=task')}>
-                EXPLORE <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+      <section className="py-16 bg-canvas-white">
+        <div className="w-full px-8 lg:px-16 max-w-4xl mx-auto">
+          <Card padding="xl" className="relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-lavender rounded-full blur-3xl opacity-50 transform translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform duration-700"></div>
+            <Badge variant="outline" className="mb-6"><BookOpen className="w-3 h-3 mr-1"/> PLAYBOOKS</Badge>
+            <h2 className="text-3xl font-display font-bold mb-4">Learn. Apply. Master AI.</h2>
+            <p className="text-text-secondary mb-8 max-w-sm">Step-by-step playbooks to help you enable AI in your work the right way. Well-researched, practical and easy to follow.</p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-canvas p-4 rounded-xl">
+                <h4 className="font-bold text-sm mb-1">Task-Specific Playbooks</h4>
+                <p className="text-xs text-text-secondary mb-4">Guides for specific tasks to help you work faster</p>
+                <button onClick={() => navigate('/playbooks/all?category=task')} className="text-brand-primary text-sm font-semibold flex items-center hover:gap-2 transition-all">
+                  Explore Playbooks <ArrowRight className="w-4 h-4 ml-1" />
+                </button>
+              </div>
+              <div className="bg-canvas p-4 rounded-xl">
+                <h4 className="font-bold text-sm mb-1">Industry-Specific Playbooks</h4>
+                <p className="text-xs text-text-secondary mb-4">Domain-focused playbooks for your industry</p>
+                <button onClick={() => navigate('/playbooks/all?category=industry')} className="text-brand-primary text-sm font-semibold flex items-center hover:gap-2 transition-all">
+                  Explore Playbooks <ArrowRight className="w-4 h-4 ml-1" />
+                </button>
+              </div>
             </div>
-            <div className="bg-bg-primary border-4 border-border-main p-8 shadow-brutal hover:-translate-y-2 transition-transform">
-              <h4 className="font-display font-bold text-3xl mb-4 uppercase">Industry-Specific</h4>
-              <p className="text-sm font-mono text-text-secondary mb-8 leading-relaxed">Domain-focused playbooks tailored for your specific industry challenges.</p>
-              <Button variant="secondary" onClick={() => navigate('/playbooks/all?category=industry')}>
-                EXPLORE <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-          </div>
+          </Card>
         </div>
       </section>
 
       {/* How it works */}
-      <section className="py-20 bg-bg-primary border-b-4 border-border-main">
-        <div className="w-full px-8 lg:px-16 max-w-7xl mx-auto flex flex-col lg:flex-row gap-16">
-          <div className="lg:w-1/3">
-            <h2 className="text-5xl lg:text-7xl font-display font-bold uppercase leading-none sticky top-32">How<br/>It<br/>Works</h2>
-          </div>
-          <div className="lg:w-2/3 flex flex-col gap-6">
-            {processSteps.map((step, i) => (
-              <div key={i} className="flex flex-col sm:flex-row border-4 border-border-main bg-bg-secondary p-8 shadow-brutal">
-                <div className="font-display text-5xl font-bold text-accent mr-8 mb-4 sm:mb-0 border-b-4 sm:border-b-0 sm:border-r-4 border-border-light pb-4 sm:pb-0 sm:pr-8 flex items-center">
-                  {step.num}
-                </div>
-                <div>
-                  <h3 className="text-2xl font-display font-bold uppercase mb-2">{step.title}</h3>
-                  <p className="font-mono text-text-secondary">{step.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+      <section className="py-16 bg-canvas">
+        <div className="w-full px-8 lg:px-16">
+          <h2 className="text-3xl font-display font-bold mb-12">How It Works</h2>
+          <Stepper steps={processSteps} />
         </div>
       </section>
 
-      {/* Why Choose Us */}
-      <section className="py-20 bg-bg-secondary border-b-4 border-border-main">
-        <div className="w-full px-8 lg:px-16 max-w-7xl mx-auto">
-          <h2 className="text-4xl lg:text-5xl font-display font-bold uppercase mb-12">Why Echo Glitch</h2>
+      {/* Stats and Why Choose Us */}
+      <section className="py-16 bg-canvas-white">
+        <div className="w-full px-8 lg:px-16">
+          <Card variant="elevated" padding="xl" className="mb-16">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:divide-x divide-border-light/50">
+              {stats.map((stat, i) => (
+                <div key={i} className={`flex flex-col items-center text-center ${i % 2 !== 0 ? 'sm:pl-8' : ''} ${i !== 0 ? 'md:pl-8' : ''}`}>
+                  <div className="w-12 h-12 bg-brand-lavender text-brand-primary rounded-full flex items-center justify-center mb-4">
+                    {stat.icon}
+                  </div>
+                  <h3 className="text-3xl font-display font-bold mb-1">{stat.value}</h3>
+                  <p className="font-semibold text-text-primary mb-1">{stat.label}</p>
+                  <p className="text-sm text-text-secondary">{stat.sub}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <h2 className="text-3xl font-display font-bold mb-10">Why Professionals Choose Echo Glitch</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {whyChooseUs.map((feature, i) => (
-              <div key={i} className="border-4 border-border-main bg-bg-primary p-6 hover:bg-text-primary hover:text-bg-primary transition-colors group">
-                <div className="w-16 h-16 border-4 border-border-main bg-accent text-accent-text flex items-center justify-center mb-6 group-hover:border-bg-primary group-hover:bg-bg-primary group-hover:text-text-primary">
+              <div key={i} className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-brand-lavender text-brand-primary flex-shrink-0 flex items-center justify-center">
                   {feature.icon}
                 </div>
-                <h4 className="font-display font-bold text-xl uppercase mb-3">{feature.title}</h4>
-                <p className="font-mono text-sm text-text-secondary group-hover:text-bg-elevated">{feature.desc}</p>
+                <div>
+                  <h4 className="font-bold mb-1">{feature.title}</h4>
+                  <p className="text-sm text-text-secondary">{feature.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -151,21 +168,28 @@ export function Homepage() {
       </section>
 
       {/* Bottom CTA */}
-      <section className="bg-accent border-b-4 border-border-main">
-        <div className="w-full px-8 lg:px-16 py-24 text-accent-text text-center flex flex-col items-center">
-          <h2 className="text-6xl lg:text-9xl font-display font-bold uppercase tracking-tighter mb-8 leading-none">Ready to<br/>Build?</h2>
-          <p className="font-mono text-xl max-w-2xl mb-12 border-2 border-border-inverse p-4 bg-bg-inverted text-text-inverted">
-            Browse the full playbook catalogue and level up your workflow immediately.
-          </p>
-          <Button
-            size="lg"
-            className="bg-bg-primary text-text-primary border-4 border-bg-primary hover:bg-transparent hover:text-bg-primary hover:border-bg-primary shadow-brutal hover:shadow-none translate-y-0 hover:translate-y-1 hover:translate-x-1 transition-all"
-            icon={<ArrowRight className="w-6 h-6" />}
-            iconPosition="right"
-            onClick={() => navigate('/playbooks')}
-          >
-            Browse All Playbooks
-          </Button>
+      <section className="py-16 bg-canvas">
+        <div className="w-full px-8 lg:px-16">
+          <div className="bg-gradient-blue-purple rounded-3xl p-10 flex flex-col md:flex-row items-center justify-between text-white shadow-lavender gap-6">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md flex-shrink-0">
+                <BookOpen className="w-8 h-8" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Ready to start building?</h2>
+                <p className="text-white/80">Browse the full playbook catalogue and level up your workflow.</p>
+              </div>
+            </div>
+            <Button
+              variant="secondary"
+              size="lg"
+              icon={<ArrowRight className="w-5 h-5" />}
+              iconPosition="right"
+              onClick={() => navigate('/playbooks')}
+            >
+              Browse All Playbooks
+            </Button>
+          </div>
         </div>
       </section>
     </div>

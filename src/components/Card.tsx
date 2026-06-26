@@ -12,12 +12,12 @@ export function Card({
   className = '',
   ...props
 }: CardProps) {
-  const baseStyles = 'rounded-none transition-none';
+  const baseStyles = 'rounded-2xl transition-all duration-300';
   
   const variants = {
-    default: 'bg-bg-secondary border-4 border-border-main',
-    elevated: 'bg-bg-elevated border-4 border-text-primary',
-    lavender: 'bg-accent text-accent-text border-4 border-border-inverse',
+    default: 'bg-canvas-white shadow-soft border border-border-light/50',
+    elevated: 'bg-canvas-white shadow-card border border-border-light/20',
+    lavender: 'bg-gradient-lavender shadow-lavender border-none',
   };
 
   const paddings = {
