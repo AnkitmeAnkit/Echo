@@ -11,6 +11,7 @@ export function Frame({ children }: { children: React.ReactNode }) {
   const navLinks = [
     { label: 'Home', path: '/' },
     { label: 'Playbooks', path: '/playbooks' },
+    { label: 'Solutions', path: '/solutions' },
     { label: 'Updates', path: '/updates' },
   ];
 
@@ -96,7 +97,7 @@ export function Frame({ children }: { children: React.ReactNode }) {
 
       <footer className="bg-footer-bg text-white pt-16 pb-10 w-full">
         <div className="w-full px-8 lg:px-16">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-14">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-12 mb-14">
             {/* Brand Column */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-5">
@@ -123,6 +124,7 @@ export function Frame({ children }: { children: React.ReactNode }) {
               <ul className="space-y-3 text-sm">
                 <li><a href="#" className="text-white/60 hover:text-white transition-colors">Home</a></li>
                 <li><a href="#" className="text-white/60 hover:text-white transition-colors">Playbooks</a></li>
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Solutions</a></li>
                 <li><a href="#" className="text-white/60 hover:text-white transition-colors">Updates</a></li>
               </ul>
             </div>
@@ -137,7 +139,15 @@ export function Frame({ children }: { children: React.ReactNode }) {
               </ul>
             </div>
 
-
+            <div>
+              <h4 className="font-semibold mb-5 text-xs uppercase tracking-widest text-white/40">Solutions</h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Browse Problems</a></li>
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Submit Problem</a></li>
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">How It Works</a></li>
+                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Pricing</a></li>
+              </ul>
+            </div>
           </div>
 
           {/* Bottom Bar */}

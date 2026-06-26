@@ -1,4 +1,4 @@
-import { Playbook } from './types';
+import { Playbook, Problem } from './types';
 
 export const PLAYBOOKS: Playbook[] = [
   {
@@ -122,6 +122,52 @@ Standard ease-in-out animations feel lazy and artificial. Adopt snappy bezier cu
     ]
   },
   {
+    slug: 'product-glitch-operations',
+    title: '1-on-1 Systems Engineering',
+    subtitle: '',
+    track: 'Consulting',
+    price: 220,
+    featured: true,
+    coverImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=600',
+    summary: 'Direct-access consulting to wire up your specific automation systems, troubleshoot technical bottlenecks, and tailor our playbooks perfectly to your unique career goals.',
+    fullDesc: 'An exhaustive playbook for digital builders seeking to escape commodity subscription flywheels. Learn how to engineer hyper-targeted value distribution and generate premium recurring service pipelines targeting the world\'s most sophisticated buyers.',
+    chapters: [
+      {
+        id: 'chapter-1',
+        title: '01. The Mechanics of Gated Digital Distribution',
+        estimatedMinutes: 15,
+        content: `### 1. Psychological Pricing & Exclusivity
+Mass-market pricing signals lack of premium distinction. The "Glitch Model" utilizes high initial thresholds combined with limited intake cohorts.
+
+* **Friction Intakes**: Force potential users through rigorous criteria forms prior to displaying access pricing.
+* **Single Purchase Blueprints**: Sell standalone operational blueprints at premium pricing rather than low-cost monthly recurring subscriptions.
+
+### 2. Constructing the Intake Firewall
+Avoid immediate open sign-ups. Guard checkout routes by forcing professional identity verification (e.g. prompt for authentic "Professional Role" and specific operational goals) to cultivate elite user demographics.`
+      },
+      {
+        id: 'chapter-2',
+        title: '02. Transitioning Direct Sale Buyers to Elite Consulting',
+        estimatedMinutes: 16,
+        content: `### 1. Contextual Playbook Triggers
+Your handbook serves as a filter. Within individual playbook chapters, place hyper-targeted anchors offering tailored implementation packages.
+
+* **Action Integration**: Anchor a Phase 2 Intake Calendar inside theoretical chapters to capture high-intent advisory leads.
+* **Self-qualification Form**: Capture the user\'s budget scale ($10k - $150k+) directly within the playbook to catalog pipeline quality automatically.`
+      },
+      {
+        id: 'chapter-3',
+        title: '03. Creating Frictionless Checkout Flows',
+        estimatedMinutes: 20,
+        content: `### 1. Eliminating Cart Abandons with 2-Click Authorization
+For registered members, checkout must never require redirection to external gateways. Open an elegant inline slide-out containing pre-loaded payment parameters.
+
+* **Stripe Elements API Integration**: Retain security alignment while customizing inputs to strict brand specifications.
+* **Receipt Automation**: Create clean, raw text receipts emailed directly as proof of access, avoiding bloated graphical design.`
+      }
+    ]
+  },
+  {
     slug: 'sovereign-ai-orchestration',
     title: 'Sovereign AI Infrastructure',
     subtitle: 'Enterprise-Grade Model Hosting, Privacy Firewalls & Private Data Pools',
@@ -162,3 +208,8 @@ Blend queried context documents cleanly within prompt formulations. Always provi
   }
 ];
 
+export const PREDEFINED_PROBLEMS: Problem[] = [
+  { category: "Business Strategy", title: "Market Entry Strategy", desc: "Need help entering a new market with the right strategy and positioning.", time: "30-45 min call", price: 9, tagColor: "lavender" },
+  { category: "Operations", title: "Process Optimization", desc: "Improve efficiency and reduce costs with streamlined business processes.", time: "30-45 min call", price: 0, tagColor: "mint" },
+  { category: "Technology", title: "Digital Transformation", desc: "Modernize your business with the right digital tools and strategy.", time: "30-45 min call", price: 9, tagColor: "lavender" }
+];

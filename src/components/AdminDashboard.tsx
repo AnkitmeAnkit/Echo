@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useAppState } from '../store';
 import { supabase } from '../supabaseClient';
-import { Playbook, BlogUpdate, User } from '../types';
-import { LayoutDashboard, BookOpen, FileText, Users, LogOut, Loader2, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Playbook, BlogUpdate, Consultation, User } from '../types';
+import { LayoutDashboard, BookOpen, FileText, MessageSquare, Users, LogOut, Loader2, Plus, Edit2, Trash2 } from 'lucide-react';
 
-type Section = 'overview' | 'playbooks' | 'updates' | 'users';
+type Section = 'overview' | 'playbooks' | 'updates' | 'solutions' | 'users';
 
 export function AdminDashboard() {
   const { currentUser, isAdmin, navigate } = useAppState();
@@ -37,6 +37,7 @@ export function AdminDashboard() {
       case 'overview': return <OverviewSection />;
       case 'playbooks': return <PlaybooksSection />;
       case 'updates': return <UpdatesSection />;
+      case 'solutions': return <SolutionsSection />;
       case 'users': return <UsersSection />;
       default: return <OverviewSection />;
     }
@@ -55,6 +56,7 @@ export function AdminDashboard() {
           <SidebarItem icon={<LayoutDashboard className="w-4 h-4" />} label="Overview" active={activeSection === 'overview'} onClick={() => setActiveSection('overview')} />
           <SidebarItem icon={<BookOpen className="w-4 h-4" />} label="Playbooks" active={activeSection === 'playbooks'} onClick={() => setActiveSection('playbooks')} />
           <SidebarItem icon={<FileText className="w-4 h-4" />} label="Updates" active={activeSection === 'updates'} onClick={() => setActiveSection('updates')} />
+          <SidebarItem icon={<MessageSquare className="w-4 h-4" />} label="Solutions" active={activeSection === 'solutions'} onClick={() => setActiveSection('solutions')} />
           <SidebarItem icon={<Users className="w-4 h-4" />} label="Users" active={activeSection === 'users'} onClick={() => setActiveSection('users')} />
         </nav>
 
@@ -116,23 +118,28 @@ function SectionLoader() {
 /* -------------------------------------------------------------------------- */
 
 function OverviewSection() {
-  const [stats, setStats] = useState({ playbooks: 0, sales: 0, users: 0 });
+  const [stats, setStats] = useState({ playbooks: 0, sales: 0, pending: 0, users: 0 });
+  const [recent, setRecent] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadOverview() {
-      const [pbRes, purRes, usrRes] = await Promise.all([
+      const [pbRes, purRes, conRes, usrRes, recentRes] = await Promise.all([
         supabase.from('playbooks').select('id', { count: 'exact', head: true }),
         supabase.from('purchases').select('id', { count: 'exact', head: true }),
-        supabase.from('profiles').select('id', { count: 'exact', head: true })
+        supabase.from('consultations').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('consultations').select('full_name, problem_title, submitted_at, status').order('submitted_at', { ascending: false }).limit(5)
       ]);
 
       setStats({
         playbooks: pbRes.count || 0,
         sales: purRes.count || 0,
+        pending: conRes.count || 0,
         users: usrRes.count || 0,
       });
 
+      if (recentRes.data) setRecent(recentRes.data);
       setLoading(false);
     }
     loadOverview();
@@ -144,10 +151,41 @@ function OverviewSection() {
     <div className="space-y-8 animate-fade-in-up">
       <h2 className="text-2xl font-bold text-white">Overview</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <StatCard label="Total Playbooks" value={stats.playbooks} icon={<BookOpen className="w-6 h-6 text-brand-primary" />} />
         <StatCard label="Total Sales" value={stats.sales} icon={<FileText className="w-6 h-6 text-brand-primary" />} />
+        <StatCard label="Pending Solutions" value={stats.pending} icon={<MessageSquare className="w-6 h-6 text-brand-primary" />} />
         <StatCard label="Total Users" value={stats.users} icon={<Users className="w-6 h-6 text-brand-primary" />} />
+      </div>
+
+      <div className="mt-12">
+        <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
+        {recent.length === 0 ? (
+          <p className="text-zinc-500">No recent consultations.</p>
+        ) : (
+          <div className="space-y-2">
+            {recent.map((r, i) => (
+              <div key={i} className="bg-zinc-900 rounded-xl px-4 py-3 border border-zinc-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className={`px-2 py-1 text-xs font-semibold rounded uppercase tracking-wider
+                    ${r.status === 'pending' ? 'bg-yellow-400/10 text-yellow-400 border border-yellow-400/30' 
+                    : r.status === 'in_review' ? 'bg-blue-400/10 text-blue-400 border border-blue-400/30' 
+                    : 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/30'}`}>
+                    {r.status}
+                  </div>
+                  <div>
+                    <span className="font-medium text-zinc-200">{r.full_name}</span>
+                    <span className="text-zinc-500 mx-2">•</span>
+                    <span className="text-zinc-400">{r.problem_title}</span>
+                  </div>
+                </div>
+                <div className="text-xs text-zinc-500 font-mono">
+                  {new Date(r.submitted_at).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -652,6 +690,140 @@ function UpdateForm({ upd, onBack }: { upd: any, onBack: () => void }) {
           {error && <span className="text-red-400 text-sm ml-auto">{error}</span>}
         </div>
       </form>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              SOLUTIONS                                     */
+/* -------------------------------------------------------------------------- */
+
+function SolutionsSection() {
+  const [consultations, setConsultations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('pending');
+
+  useEffect(() => {
+    async function loadConsultations() {
+      const { data } = await supabase.from('consultations').select('*').order('submitted_at', { ascending: false });
+      if (data) setConsultations(data);
+      setLoading(false);
+    }
+    loadConsultations();
+  }, []);
+
+  const counts = {
+    all: consultations.length,
+    pending: consultations.filter(c => c.status === 'pending').length,
+    in_review: consultations.filter(c => c.status === 'in_review').length,
+    resolved: consultations.filter(c => c.status === 'resolved').length
+  };
+
+  const filtered = filter === 'all' ? consultations : consultations.filter(c => c.status === filter);
+
+  if (loading) return <SectionLoader />;
+
+  return (
+    <div className="space-y-6 animate-fade-in-up">
+      <h2 className="text-2xl font-bold text-white mb-6">User Consultations</h2>
+      
+      <div className="flex flex-wrap gap-3 mb-6">
+        <FilterBtn active={filter === 'all'} onClick={() => setFilter('all')} label={`All (${counts.all})`} />
+        <FilterBtn active={filter === 'pending'} onClick={() => setFilter('pending')} label={`Pending (${counts.pending})`} />
+        <FilterBtn active={filter === 'in_review'} onClick={() => setFilter('in_review')} label={`In Review (${counts.in_review})`} />
+        <FilterBtn active={filter === 'resolved'} onClick={() => setFilter('resolved')} label={`Resolved (${counts.resolved})`} />
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 text-zinc-500">No consultations found in this category.</div>
+      ) : (
+        <div className="space-y-6">
+          {filtered.map(c => <ConsultationCard key={c.id} data={c} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FilterBtn({ active, label, onClick }: { active: boolean, label: string, onClick: () => void }) {
+  return (
+    <button onClick={onClick} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${active ? 'bg-zinc-800 text-white border border-zinc-600' : 'bg-zinc-900/50 text-zinc-500 hover:text-zinc-300 border border-zinc-800/50 hover:bg-zinc-900'}`}>
+      {label}
+    </button>
+  );
+}
+
+function ConsultationCard({ data }: { data: any; key?: any }) {
+  const [status, setStatus] = useState(data.status);
+  const [note, setNote] = useState(data.admin_note || '');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    await supabase.from('consultations').update({ status, admin_note: note }).eq('id', data.id);
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const statusColors: any = {
+    pending: 'bg-yellow-400/10 text-yellow-400 border-yellow-400/30',
+    in_review: 'bg-blue-400/10 text-blue-400 border-blue-400/30',
+    resolved: 'bg-emerald-400/10 text-emerald-400 border-emerald-400/30'
+  };
+
+  return (
+    <div className="bg-zinc-900 border border-zinc-700/50 rounded-xl p-6">
+      <div className="flex justify-between items-start mb-6">
+        <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border ${statusColors[status]}`}>
+          {status.replace('_', ' ')}
+        </div>
+        <div className="text-sm text-zinc-500 font-mono">Submitted: {new Date(data.submitted_at).toLocaleString()}</div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+        <div>
+          <div className="text-zinc-500 text-xs font-medium uppercase tracking-widest mb-1">User Info</div>
+          <div className="text-zinc-200"><span className="text-zinc-500 mr-2">Name:</span> {data.full_name}</div>
+          <div className="text-zinc-200"><span className="text-zinc-500 mr-2">Email:</span> {data.email}</div>
+          <div className="text-zinc-200"><span className="text-zinc-500 mr-2">Phone:</span> {data.phone || '—'}</div>
+        </div>
+        <div>
+          <div className="text-zinc-500 text-xs font-medium uppercase tracking-widest mb-1">Payment Info</div>
+          <div className="text-zinc-200"><span className="text-zinc-500 mr-2">Paid:</span> ₹{data.amount_paid}</div>
+          <div className="text-zinc-200"><span className="text-zinc-500 mr-2">Ref:</span> {data.payment_ref}</div>
+          <div className="text-emerald-400 mt-1 flex items-center gap-1 text-sm"><span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span> {data.payment_status}</div>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <div className="text-zinc-500 text-xs font-medium uppercase tracking-widest mb-1">Problem</div>
+        <div className="text-white font-medium mb-2">{data.problem_title} <span className="text-zinc-500 text-sm ml-2">({data.problem_type})</span></div>
+        <div className="text-zinc-300 text-sm leading-relaxed p-4 bg-zinc-950 rounded-lg whitespace-pre-wrap">{data.details}</div>
+      </div>
+
+      <div className="border-t border-zinc-800 pt-6">
+        <div className="text-zinc-500 text-xs font-medium uppercase tracking-widest mb-2">Admin Actions</div>
+        <textarea 
+          placeholder="Add internal notes here..." 
+          rows={3} 
+          value={note} 
+          onChange={e => setNote(e.target.value)} 
+          className="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-brand-primary w-full resize-none mb-4"
+        />
+        <div className="flex items-center gap-4">
+          <select value={status} onChange={e => setStatus(e.target.value)} className="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-primary">
+            <option value="pending">Pending</option>
+            <option value="in_review">In Review</option>
+            <option value="resolved">Resolved</option>
+          </select>
+          <button onClick={handleSave} disabled={saving} className="bg-brand-primary text-black font-semibold px-5 py-2.5 rounded-xl hover:opacity-90 disabled:opacity-50">
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+          {saved && <span className="text-emerald-400 text-sm">Saved ✓</span>}
+        </div>
+      </div>
     </div>
   );
 }
